@@ -49,7 +49,7 @@ exports.handler = async (event) => {
     request_type:                data.request_type                || "",
     subsidy_eligible:            data.subsidy_eligible            || "",
     budget_range_hvac:           data.budget_range_hvac           || "",
-    lead_temperature:            data.lead_temperature            || "",
+    temperature_lead:            data.lead_temperature            || "",
     notes_hvac:                  data.notes_hvac                  || "",
   };
 

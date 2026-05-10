@@ -108,7 +108,7 @@ exports.handler = async (event) => {
     request_type: clean(data.request_type),
     subsidy_eligible: clean(data.subsidy_eligible),
     budget_range_hvac: clean(data.budget_range_hvac),
-    lead_temperature: clean(data.lead_temperature),
+   temperature_lead: clean(data.lead_temperature),
     notes_hvac: clean(data.notes_hvac),
   });
 

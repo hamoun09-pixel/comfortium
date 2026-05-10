@@ -104,7 +104,7 @@ exports.handler = async (event) => {
     contact_method_preference: clean(data.contact_method_preference),
     property_type: clean(data.property_type),
     hvac_system_type: clean(data.hvac_system_type),
-    urgency_level: clean(data.urgency_level),
+   niveau_urgence: clean(data.urgency_level),
     request_type: clean(data.request_type),
     subsidy_eligible: clean(data.subsidy_eligible),
     budget_range_hvac: clean(data.budget_range_hvac),

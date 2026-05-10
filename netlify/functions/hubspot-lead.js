@@ -72,11 +72,13 @@ exports.handler = async (event) => {
     return jsonResponse(405, { error: "Method Not Allowed" });
   }
 
-  const token = process.env.HUBSPOT_PRIVATE_APP_TOKEN;
-  if (!token) {
-    console.error("HUBSPOT_PRIVATE_APP_TOKEN is not set");
-    return jsonResponse(500, { error: "Server configuration error: missing token" });
-  }
+ const token = process.env.HUBSPOT_PRIVATE_APP_TOKEN;
+
+if (!token) {
+  return jsonResponse(500, {
+    error: "Server configuration error: missing token",
+  });
+}
 
   let data;
   try {

@@ -424,6 +424,11 @@
       <div id="repasList"></div>
     </div>
     <div class="card">
+      <h2>📚 Livre de recettes</h2>
+      <p class="muted small">Le Grand Livre de la Cuisine Méditerranéenne Santé — tes sections préchargées dans l'app. Chaque recette peut être ajoutée au journal du jour (calories moyennes de la portion).</p>
+      <div id="livreList" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
       <h2>📖 Mes recettes — sections personnalisées</h2>
       <p class="muted small">Crée tes propres sections (smoothies, desserts protéinés, plats express, recettes de famille…) et remplis-les de recettes. Chaque recette peut être ajoutée au journal du jour en un clic.</p>
       <div class="row2" style="margin-top:10px;">
@@ -1332,7 +1337,136 @@ function renderRepas(){
     repasDay = +b.dataset.d; renderRepas();
   }));
   $("repasList").innerHTML = `<p class="muted small" style="margin-bottom:8px;">${JOURS_LMD[repasDay]}</p>` + mealHTML(repasDay, c, false);
+  renderLivre();
   renderSections();
+}
+
+/* ════════════════════════════════ LIVRE DE RECETTES (sections préchargées) ════════════════════════════════ */
+/* Contenu : « Le Grand Livre de la Cuisine Méditerranéenne Santé » (sections fournies par l'utilisateur). */
+const LIVRE = [
+  {
+    nom:"Section 15 — Collations santé",
+    desc:"Les collations méditerranéennes permettent de maintenir un bon niveau d'énergie entre les repas. Elles privilégient les aliments peu transformés, riches en protéines, fibres et bons gras.",
+    kcal:225, prot:13,
+    valeurs:"≈ 150–300 kcal | Protéines 8–18 g | Glucides 10–25 g | Lipides 7–18 g | Fibres 3–7 g (par portion)",
+    infos:"Portions : 1 à 2 · Préparation : 5 à 15 min",
+    prep:"Préparer les ingrédients ; assembler ou mélanger selon la recette ; réfrigérer au besoin ou servir immédiatement.",
+    recettes:[
+      {n:"Yogourt grec aux noix et miel", i:["200 g de yogourt grec nature","15 g de noix","1 c. à thé de miel"]},
+      {n:"Pommes et beurre d'amande", i:["1 pomme","1 c. à soupe de beurre d'amande naturel"]},
+      {n:"Houmous et légumes croquants", i:["Houmous","Bâtonnets de carotte","Concombre","Céleri"]},
+      {n:"Mélange méditerranéen", i:["Amandes","Noix","Pistaches","Graines de courge"]},
+      {n:"Œufs durs et tomates cerises", i:["2 œufs","Tomates cerises","Poivre"]},
+      {n:"Toast d'avocat", i:["1 tranche de pain complet","½ avocat","Flocons de piment"]},
+      {n:"Fromage cottage et fruits", i:["200 g de fromage cottage","Petits fruits frais"]},
+      {n:"Boules d'énergie aux dattes", i:["Dattes","Avoine","Amandes","Graines de chia","Cacao non sucré"]}
+    ]
+  },
+  {
+    nom:"Section 16 — Desserts santé",
+    desc:"Les desserts méditerranéens privilégient les fruits, le yogourt, les noix, les graines et le chocolat noir. Ils limitent les sucres raffinés tout en offrant des saveurs gourmandes.",
+    kcal:210, prot:8,
+    valeurs:"≈ 140–280 kcal | Protéines 4–12 g | Glucides 18–30 g | Lipides 5–12 g | Fibres 3–8 g (par portion)",
+    infos:"Portions : 2 à 4 · Préparation : 10 à 20 min · Cuisson : selon la recette",
+    prep:"Préparer les ingrédients ; mélanger ou cuire selon la recette ; laisser refroidir ou réfrigérer au besoin ; servir garni de fruits frais ou de noix.",
+    recettes:[
+      {n:"Yogourt grec aux fruits et noix", i:["200 g yogourt grec","Petits fruits","15 g noix","1 c. à thé miel"]},
+      {n:"Pommes au four à la cannelle", i:["2 pommes","Cannelle","10 g noix hachées"]},
+      {n:"Poires pochées aux épices", i:["2 poires","Cannelle","Vanille","Zeste d'orange"]},
+      {n:"Mousse au chocolat noir et avocat", i:["1 avocat mûr","50 g chocolat noir 70 %","Cacao","Vanille"]},
+      {n:"Salade de fruits méditerranéenne", i:["Orange","Kiwi","Fraises","Menthe fraîche"]},
+      {n:"Chia pudding", i:["250 ml lait","3 c. à soupe graines de chia","Vanille","Petits fruits"]},
+      {n:"Bananes grillées aux amandes", i:["2 bananes","Amandes effilées","Cannelle"]},
+      {n:"Carrés d'avoine aux bleuets", i:["Flocons d'avoine","Bleuets","Compote de pommes sans sucre","Cannelle"]}
+    ]
+  },
+  {
+    nom:"Section 17 — Sauces, vinaigrettes et marinades",
+    desc:"Les sauces et marinades méditerranéennes misent sur l'huile d'olive extra vierge, les herbes fraîches, les agrumes et les épices. Elles ajoutent de la saveur sans recourir à des sauces industrielles riches en sucre, sel ou gras saturés.",
+    kcal:90, prot:3,
+    valeurs:"≈ 40–140 kcal | Protéines 1–5 g | Glucides 1–6 g | Lipides 3–12 g (par portion)",
+    infos:"Portions : 4 à 8 · Préparation : 10 à 15 min · Accompagne salades, légumes, poissons, volailles ou sandwichs",
+    prep:"Déposer tous les ingrédients dans un bol ou un mélangeur ; mélanger jusqu'à une texture homogène ; rectifier l'assaisonnement ; réfrigérer 15 à 30 min avant de servir lorsque possible.",
+    recettes:[
+      {n:"Vinaigrette classique au citron", i:["4 c. à soupe d'huile d'olive","2 c. à soupe de jus de citron","1 c. à thé de moutarde de Dijon","Poivre","Origan"]},
+      {n:"Vinaigrette balsamique", i:["4 c. à soupe d'huile d'olive","2 c. à soupe de vinaigre balsamique","1 gousse d'ail","Basilic"]},
+      {n:"Sauce au yogourt et concombre", i:["200 g de yogourt grec","½ concombre râpé","Aneth","Jus de citron","Ail"]},
+      {n:"Pesto léger au basilic", i:["Basilic frais","Parmesan","Amandes ou noix","Huile d'olive","Ail"]},
+      {n:"Marinade citron-romarin", i:["Huile d'olive","Jus de citron","Romarin","Ail","Poivre"]},
+      {n:"Marinade aux herbes", i:["Huile d'olive","Thym","Origan","Persil","Paprika"]},
+      {n:"Sauce tomate maison", i:["Tomates concassées","Oignon","Ail","Basilic","Huile d'olive"]},
+      {n:"Houmous maison", i:["Pois chiches","Tahini","Jus de citron","Ail","Huile d'olive","Cumin"]}
+    ]
+  },
+  {
+    nom:"Section 18 — Menus hebdomadaires",
+    desc:"Une semaine type d'alimentation méditerranéenne, adaptable selon les besoins énergétiques et les préférences alimentaires.",
+    blocs:[
+      {t:"Lundi", c:["Déjeuner : Gruau aux petits fruits","Dîner : Salade de quinoa et pois chiches","Souper : Saumon, brocoli rôti et riz brun","Collation : Yogourt grec et noix"]},
+      {t:"Mardi", c:["Déjeuner : Omelette aux épinards","Dîner : Soupe de lentilles et salade","Souper : Poulet citron-romarin et légumes rôtis","Collation : Pomme et beurre d'amande"]},
+      {t:"Mercredi", c:["Déjeuner : Smoothie vert protéiné","Dîner : Taboulé santé","Souper : Morue méditerranéenne et quinoa","Collation : Houmous et crudités"]},
+      {t:"Jeudi", c:["Déjeuner : Yogourt grec aux fruits","Dîner : Salade grecque","Souper : Tajine de dinde et couscous complet","Collation : Mélange de noix"]},
+      {t:"Vendredi", c:["Déjeuner : Toast avocat et œuf","Dîner : Minestrone","Souper : Crevettes à l'ail et orge","Collation : Fromage cottage et fruits"]},
+      {t:"Samedi", c:["Déjeuner : Chia pudding","Dîner : Salade de lentilles","Souper : Poulet aux olives et légumes","Collation : Boules d'énergie"]},
+      {t:"Dimanche", c:["Déjeuner : Porridge d'avoine","Dîner : Poivrons farcis au quinoa","Souper : Bœuf maigre grillé et ratatouille","Collation : Poire pochée"]},
+      {t:"Conseils de planification", c:["Préparer les légumineuses et les céréales à l'avance.","Laver et couper les légumes dès le retour de l'épicerie.","Prévoir des collations santé prêtes à emporter.","Varier les protéines entre poisson, volaille et légumineuses."]}
+    ]
+  },
+  {
+    nom:"Section 19 — Guide nutritionnel et valeurs alimentaires",
+    desc:"Les principaux repères nutritionnels du régime méditerranéen. Les valeurs indiquées sont approximatives et servent de guide pour planifier des repas équilibrés.",
+    blocs:[
+      {t:"1. Répartition suggérée de l'assiette", c:["Légumes : 50 %","Protéines maigres ou légumineuses : 25 %","Céréales complètes : 25 %","Huile d'olive : 1 à 2 c. à soupe selon le repas"]},
+      {t:"2. Portions de référence", c:["Poisson ou volaille : 100 à 150 g","Légumineuses cuites : 150 à 200 g","Quinoa, riz brun ou couscous complet cuits : 125 à 150 g","Fruits : 1 portion moyenne","Légumes : au moins 2 tasses par repas principal","Noix et graines : 30 g par jour","Huile d'olive : 2 à 4 cuillères à soupe par jour"]},
+      {t:"3. Aliments à privilégier", c:["Légumes variés","Fruits frais","Légumineuses","Céréales complètes","Poissons","Volailles","Yogourt nature","Herbes et épices","Huile d'olive extra vierge"]},
+      {t:"4. Aliments à limiter", c:["Boissons sucrées","Pâtisseries riches en sucre","Produits ultra-transformés","Charcuteries","Excès de sel","Graisses trans"]},
+      {t:"5. Conseils pratiques", c:["Boire suffisamment d'eau tout au long de la journée.","Cuisiner davantage à la maison.","Privilégier les aliments de saison.","Lire les étiquettes nutritionnelles.","Pratiquer une activité physique régulièrement."]}
+    ]
+  }
+];
+let livreOuvert = null;
+function renderLivre(){
+  $("livreList").innerHTML = LIVRE.map((sec,si)=>`
+    <div class="wday ${livreOuvert===si?"open":""}">
+      <div class="whead" data-lhead="${si}">
+        <h4>📕 ${esc(sec.nom)}</h4>
+        <span class="tag ${sec.recettes?"cardio":"repos"}">${sec.recettes ? sec.recettes.length+" recettes" : "Guide"}</span>
+      </div>
+      <div class="wbody">
+        <p class="muted small" style="margin-bottom:10px;">${esc(sec.desc)}</p>
+        ${sec.infos ? `<p class="muted small" style="margin-bottom:10px;"><b>${esc(sec.infos)}</b></p>` : ""}
+        ${sec.recettes ? sec.recettes.map((r,ri)=>`
+          <div class="meal">
+            <div class="mhead">
+              <div><h4>${esc(r.n)}</h4></div>
+              <div class="kcal">≈ ${sec.kcal} kcal · ${sec.prot} g prot.</div>
+            </div>
+            <ul>${r.i.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+            <div class="prep">${esc(sec.prep)}</div>
+            <div class="muted small" style="margin-top:6px;">${esc(sec.valeurs)}</div>
+            <button type="button" class="eat-btn" data-livrej="${si}:${ri}">➕ Au journal du jour (≈ ${sec.kcal} kcal)</button>
+          </div>`).join("") : ""}
+        ${sec.blocs ? sec.blocs.map(b=>`
+          <h3>${esc(b.t)}</h3>
+          <ul class="muted" style="margin:0 0 8px 18px; font-size:.85rem; line-height:1.65;">
+            ${b.c.map(x=>`<li>${esc(x)}</li>`).join("")}
+          </ul>`).join("") : ""}
+      </div>
+    </div>`).join("");
+  $("livreList").querySelectorAll("[data-lhead]").forEach(h=>h.addEventListener("click", ()=>{
+    const si = +h.dataset.lhead;
+    livreOuvert = livreOuvert===si ? null : si;
+    renderLivre();
+  }));
+  $("livreList").querySelectorAll("[data-livrej]").forEach(b=>b.addEventListener("click", ()=>{
+    const [si,ri] = b.dataset.livrej.split(":").map(Number);
+    const sec = LIVRE[si];
+    jourData(todayKey()).extra.push({n:sec.recettes[ri].n, k:sec.kcal});
+    save();
+    b.textContent = "✔ Ajouté au journal";
+    b.classList.add("eaten");
+    setTimeout(()=>{ b.textContent = `➕ Au journal du jour (≈ ${sec.kcal} kcal)`; b.classList.remove("eaten"); }, 1800);
+  }));
 }
 
 /* ════════════════════════════════ MES RECETTES (sections personnalisées) ════════════════════════════════ */

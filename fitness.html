@@ -246,6 +246,19 @@
         </select>
         <label>Poids désiré (kg)</label>
         <input type="number" id="f-cible" min="35" max="300" step="0.1" required>
+        <label>Programme d'entraînement</label>
+        <select id="f-programme">
+          <option value="auto" selected>🤖 Automatique (adapté à mon objectif)</option>
+          <option value="shred">🔥 Shred</option>
+          <option value="muscu">💪 Musculation</option>
+          <option value="perte">⚖️ Perte de poids</option>
+          <option value="masse">📈 Prise de masse / gain de poids</option>
+          <option value="graisse">🎯 Perte de graisse (circuits)</option>
+          <option value="cardio">❤️ Cardio équipé (tapis, rameur, sac de boxe…)</option>
+          <option value="calisthenie">🤸 Calisthénie (poids du corps)</option>
+          <option value="maison">🏠 Maison (sans salle)</option>
+          <option value="custom">🛠️ Mon programme (personnalisé)</option>
+        </select>
         <button class="btn" type="submit">Calculer mon programme</button>
       </form>
     </div>
@@ -366,7 +379,21 @@
   <section class="view" id="view-training">
     <div class="card">
       <h2>🏋️ Plan hebdomadaire — <span id="t-goal"></span></h2>
-      <p class="muted" id="t-desc"></p>
+      <label>Changer de programme</label>
+      <select id="progSelect">
+        <option value="auto">🤖 Automatique (adapté à mon objectif)</option>
+        <option value="shred">🔥 Shred</option>
+        <option value="muscu">💪 Musculation</option>
+        <option value="perte">⚖️ Perte de poids</option>
+        <option value="masse">📈 Prise de masse / gain de poids</option>
+        <option value="graisse">🎯 Perte de graisse (circuits)</option>
+        <option value="cardio">❤️ Cardio équipé (tapis, rameur, sac de boxe…)</option>
+        <option value="calisthenie">🤸 Calisthénie (poids du corps)</option>
+        <option value="maison">🏠 Maison (sans salle)</option>
+        <option value="custom">🛠️ Mon programme (personnalisé)</option>
+      </select>
+      <p class="muted" id="t-desc" style="margin-top:10px;"></p>
+      <div id="customEditor" hidden style="margin-top:12px;"></div>
       <div id="trainingList" style="margin-top:12px;"></div>
     </div>
   </section>
@@ -512,45 +539,95 @@ const RECETTES = {
   }
 };
 
-/* ─── Programmes d'entraînement par objectif : 7 jours (Lundi → Dimanche) ─── */
+/* ─── Programmes d'entraînement : 7 jours (Lundi → Dimanche), conçus façon coach.
+   Chaque séance : échauffement, exercices (séries × reps), repos, et notes de progression. ─── */
+const PROG_INFO = {
+  shred:       {label:"🔥 Shred",            desc:"6 jours/semaine : 3 séances musculation full body lourdes + 3 cardio (HIIT et zone 2). Le but : garder un maximum de muscle pendant une sèche agressive. Progression : garde tes charges, réduis les repos semaine après semaine."},
+  muscu:       {label:"💪 Musculation",       desc:"Split haut/bas sur 4 séances : 2 jours force (charges lourdes, 6-8 reps, repos longs) + 2 jours volume (10-15 reps). Progression : ajoute 2,5 kg ou 1 rep quand tu complètes toutes les séries."},
+  perte:       {label:"⚖️ Perte de poids",    desc:"3 séances full body simples + cardio modéré. Idéal pour débuter ou reprendre : la régularité bat l'intensité. Progression : maîtrise d'abord la technique, puis ajoute des reps."},
+  masse:       {label:"📈 Prise de masse",     desc:"Push / Pull / Legs + 2 jours volume : 5 séances, gros exercices polyarticulaires d'abord, repos 2-3 min sur les lourds. Progression : surcharge progressive obligatoire — note tes charges et bats-les."},
+  graisse:     {label:"🎯 Perte de graisse",   desc:"Circuits métaboliques + HIIT : la musculation en circuit garde la fréquence cardiaque haute pour brûler un maximum tout en stimulant le muscle. Enchaîne les exercices, repos courts (30-45 s)."},
+  cardio:      {label:"❤️ Cardio équipé",      desc:"Un équipement différent chaque jour : tapis roulant, rameur, sac de boxe, elliptique, vélo, trampoline, médecine-ball, haltères. Alterne intensité (HIIT) et endurance (zone 2 : on peut tenir une conversation)."},
+  calisthenie: {label:"🤸 Calisthénie",        desc:"Poids du corps uniquement : pompes, tractions, dips, squats, gainage et skills. Progression : passe aux variantes plus dures (déclinées, archer, pistol) quand tu dépasses les reps cibles."},
+  maison:      {label:"🏠 Maison",             desc:"Zéro salle : poids du corps + haltères ou élastiques si tu en as. Séances de 30-40 min, matériel improvisé (chaise, canapé, escaliers). Aucune excuse logistique."},
+  custom:      {label:"🛠️ Mon programme",     desc:"Ton propre programme : choisis le type de chaque jour et écris tes exercices. Un exercice par ligne, au format « Nom | séries × reps »."}
+};
 const PROGRAMMES = {
   shred: [
-    {t:"muscu", n:"Full body A", ex:[["Squat gobelet","4 × 12"],["Développé haltères","4 × 10"],["Rowing haltère","4 × 12"],["Fentes marchées","3 × 20 pas"],["Planche","3 × 45 s"]]},
-    {t:"cardio", n:"HIIT 20 min", ex:[["Échauffement","5 min facile"],["Intervalles vélo/course","10 × (30 s fort / 60 s lent)"],["Retour au calme","5 min"]]},
-    {t:"muscu", n:"Full body B", ex:[["Soulevé de terre roumain","4 × 10"],["Développé incliné","4 × 10"],["Tirage vertical","4 × 12"],["Hip thrust","3 × 15"],["Gainage latéral","3 × 30 s/côté"]]},
+    {t:"muscu", n:"Full body A — jambes dominant", ex:[["🔥 Échauffement","5 min vélo + mobilité hanches"],["Squat gobelet","4 × 12"],["Développé haltères","4 × 10"],["Rowing haltère","4 × 12"],["Fentes marchées","3 × 20 pas"],["Planche","3 × 45 s"],["💤 Repos entre séries","60–90 s"]]},
+    {t:"cardio", n:"HIIT 20 min", ex:[["Échauffement","5 min facile"],["Intervalles vélo/course/rameur","10 × (30 s fort / 60 s lent)"],["Retour au calme","5 min"]]},
+    {t:"muscu", n:"Full body B — tirage dominant", ex:[["🔥 Échauffement","5 min rameur + épaules élastique"],["Soulevé de terre roumain","4 × 10"],["Développé incliné","4 × 10"],["Tirage vertical","4 × 12"],["Hip thrust","3 × 15"],["Gainage latéral","3 × 30 s/côté"],["💤 Repos entre séries","60–90 s"]]},
     {t:"cardio", n:"Cardio LISS 40 min", ex:[["Marche rapide / vélo / elliptique","40 min zone 2 (on peut parler)"]]},
-    {t:"muscu", n:"Full body C + abdos", ex:[["Presse à cuisses","4 × 12"],["Épaulé haltères","3 × 12"],["Rowing machine","4 × 12"],["Crunchs câble","3 × 15"],["Relevés de jambes","3 × 12"]]},
+    {t:"muscu", n:"Full body C + abdos", ex:[["🔥 Échauffement","5 min cardio au choix"],["Presse à cuisses","4 × 12"],["Épaulé haltères","3 × 12"],["Rowing machine","4 × 12"],["Crunchs câble","3 × 15"],["Relevés de jambes","3 × 12"],["💤 Repos entre séries","60–90 s"]]},
     {t:"cardio", n:"HIIT ou sport au choix", ex:[["HIIT 20 min ou sport (soccer, natation, vélo…)","30–45 min"]]},
     {t:"repos", n:"Repos actif", ex:[["Marche extérieure","45–60 min"],["Étirements / mobilité","15 min"]]}
   ],
   perte: [
-    {t:"muscu", n:"Full body A", ex:[["Squat","3 × 12"],["Développé couché ou pompes","3 × 10"],["Rowing","3 × 12"],["Planche","3 × 40 s"]]},
+    {t:"muscu", n:"Full body A", ex:[["🔥 Échauffement","5 min marche rapide + rotations"],["Squat","3 × 12"],["Développé couché ou pompes","3 × 10"],["Rowing","3 × 12"],["Planche","3 × 40 s"],["💤 Repos entre séries","90 s"]]},
     {t:"cardio", n:"Marche rapide / vélo", ex:[["Cardio modéré zone 2","35–45 min"]]},
-    {t:"muscu", n:"Full body B", ex:[["Soulevé de terre roumain","3 × 10"],["Développé épaules","3 × 12"],["Tirage vertical","3 × 12"],["Gainage","3 × 40 s"]]},
+    {t:"muscu", n:"Full body B", ex:[["🔥 Échauffement","5 min vélo"],["Soulevé de terre roumain","3 × 10"],["Développé épaules","3 × 12"],["Tirage vertical","3 × 12"],["Gainage","3 × 40 s"],["💤 Repos entre séries","90 s"]]},
     {t:"repos", n:"Repos", ex:[["Marche légère","30 min"]]},
-    {t:"muscu", n:"Full body C", ex:[["Fentes","3 × 12/jambe"],["Développé incliné","3 × 10"],["Rowing haltère","3 × 12"],["Abdos au choix","3 séries"]]},
+    {t:"muscu", n:"Full body C", ex:[["🔥 Échauffement","5 min cardio au choix"],["Fentes","3 × 12/jambe"],["Développé incliné","3 × 10"],["Rowing haltère","3 × 12"],["Abdos au choix","3 séries"],["💤 Repos entre séries","90 s"]]},
     {t:"cardio", n:"Cardio plaisir", ex:[["Vélo, natation, randonnée, danse…","40–60 min"]]},
     {t:"repos", n:"Repos actif", ex:[["Marche + étirements","30–45 min"]]}
   ],
   muscu: [
-    {t:"muscu", n:"Haut du corps — force", ex:[["Développé couché","4 × 6-8"],["Rowing barre","4 × 6-8"],["Développé militaire","3 × 8"],["Tirage vertical","3 × 10"],["Curl + extensions triceps","3 × 12"]]},
-    {t:"muscu", n:"Bas du corps — force", ex:[["Squat","4 × 6-8"],["Soulevé de terre roumain","3 × 8"],["Presse à cuisses","3 × 10"],["Mollets debout","4 × 15"],["Gainage","3 × 45 s"]]},
+    {t:"muscu", n:"Haut du corps — force", ex:[["🔥 Échauffement","5 min rameur + séries légères"],["Développé couché","4 × 6-8 · repos 2-3 min"],["Rowing barre","4 × 6-8 · repos 2-3 min"],["Développé militaire","3 × 8"],["Tirage vertical","3 × 10"],["Curl + extensions triceps","3 × 12 · repos 60 s"]]},
+    {t:"muscu", n:"Bas du corps — force", ex:[["🔥 Échauffement","5 min vélo + squats à vide"],["Squat","4 × 6-8 · repos 2-3 min"],["Soulevé de terre roumain","3 × 8"],["Presse à cuisses","3 × 10"],["Mollets debout","4 × 15"],["Gainage","3 × 45 s"]]},
     {t:"cardio", n:"Cardio léger + mobilité", ex:[["Vélo ou marche inclinée","25–30 min zone 2"],["Mobilité hanches/épaules","10 min"]]},
-    {t:"muscu", n:"Haut du corps — volume", ex:[["Développé incliné haltères","4 × 10"],["Rowing haltère","4 × 10"],["Élévations latérales","4 × 15"],["Tractions ou tirage","3 × max"],["Bras superset","3 × 12"]]},
-    {t:"muscu", n:"Bas du corps — volume", ex:[["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl","3 × 12"],["Extensions quadriceps","3 × 15"],["Abdos","3 séries"]]},
+    {t:"muscu", n:"Haut du corps — volume", ex:[["🔥 Échauffement","5 min + épaules élastique"],["Développé incliné haltères","4 × 10"],["Rowing haltère","4 × 10"],["Élévations latérales","4 × 15"],["Tractions ou tirage","3 × max"],["Bras superset","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Bas du corps — volume", ex:[["🔥 Échauffement","5 min vélo"],["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl","3 × 12"],["Extensions quadriceps","3 × 15"],["Abdos","3 séries · repos 60-90 s"]]},
     {t:"cardio", n:"Cardio au choix", ex:[["Sport, natation, vélo…","30 min"]]},
     {t:"repos", n:"Repos complet", ex:[["Récupération, sommeil, étirements","—"]]}
   ],
   masse: [
-    {t:"muscu", n:"Push — pectoraux/épaules/triceps", ex:[["Développé couché","4 × 6-8"],["Développé incliné haltères","4 × 10"],["Développé militaire","3 × 8"],["Élévations latérales","4 × 15"],["Extensions triceps","3 × 12"]]},
-    {t:"muscu", n:"Pull — dos/biceps", ex:[["Soulevé de terre","4 × 5"],["Tractions ou tirage vertical","4 × 8"],["Rowing barre","4 × 8"],["Face pull","3 × 15"],["Curl barre","3 × 10"]]},
-    {t:"muscu", n:"Legs — jambes", ex:[["Squat","4 × 6-8"],["Presse à cuisses","4 × 10"],["Soulevé de terre roumain","3 × 10"],["Mollets","4 × 15"],["Abdos lestés","3 × 12"]]},
+    {t:"muscu", n:"Push — pectoraux/épaules/triceps", ex:[["🔥 Échauffement","5 min + 2 séries légères au 1er exercice"],["Développé couché","4 × 6-8 · repos 2-3 min"],["Développé incliné haltères","4 × 10"],["Développé militaire","3 × 8"],["Élévations latérales","4 × 15"],["Extensions triceps","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Pull — dos/biceps", ex:[["🔥 Échauffement","5 min rameur + tirages légers"],["Soulevé de terre","4 × 5 · repos 3 min"],["Tractions ou tirage vertical","4 × 8"],["Rowing barre","4 × 8"],["Face pull","3 × 15"],["Curl barre","3 × 10 · repos 60-90 s"]]},
+    {t:"muscu", n:"Legs — jambes", ex:[["🔥 Échauffement","5 min vélo + squats à vide"],["Squat","4 × 6-8 · repos 2-3 min"],["Presse à cuisses","4 × 10"],["Soulevé de terre roumain","3 × 10"],["Mollets","4 × 15"],["Abdos lestés","3 × 12"]]},
     {t:"repos", n:"Repos", ex:[["Récupération + repas complets","—"]]},
-    {t:"muscu", n:"Haut du corps — volume", ex:[["Développé incliné","4 × 10"],["Rowing haltère","4 × 10"],["Dips","3 × max"],["Élévations latérales","4 × 15"],["Bras superset","3 × 12"]]},
-    {t:"muscu", n:"Bas du corps — volume", ex:[["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl + extensions","3 × 12"],["Mollets assis","4 × 15"]]},
+    {t:"muscu", n:"Haut du corps — volume", ex:[["🔥 Échauffement","5 min au choix"],["Développé incliné","4 × 10"],["Rowing haltère","4 × 10"],["Dips","3 × max"],["Élévations latérales","4 × 15"],["Bras superset","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Bas du corps — volume", ex:[["🔥 Échauffement","5 min vélo"],["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl + extensions","3 × 12"],["Mollets assis","4 × 15"]]},
     {t:"cardio", n:"Cardio santé léger", ex:[["Marche ou vélo tranquille","25 min"]]}
+  ],
+  graisse: [
+    {t:"muscu", n:"Circuit haltères full body", ex:[["🔥 Échauffement","5 min corde à sauter"],["Circuit 4 tours · repos 45 s entre tours",""],["1. Goblet squat","× 15"],["2. Développé haltères","× 12"],["3. Rowing haltère","× 12/bras"],["4. Fentes alternées","× 20"],["5. Mountain climbers","× 30 s"]]},
+    {t:"cardio", n:"HIIT tapis roulant ou vélo", ex:[["Échauffement","5 min facile"],["Sprints","8 × (1 min rapide / 1 min marche)"],["Retour au calme","5 min"]]},
+    {t:"muscu", n:"Circuit poids du corps + médecine-ball", ex:[["🔥 Échauffement","jumping jacks 3 min"],["Circuit 4 tours · repos 45 s",""],["1. Squats sautés","× 12"],["2. Pompes","× 12"],["3. Slams médecine-ball","× 15"],["4. Russian twists (ballon)","× 20"],["5. Burpees","× 10"]]},
+    {t:"cardio", n:"LISS + gainage", ex:[["Elliptique / marche inclinée","35 min zone 2"],["Planche + gainage latéral","3 × 45 s + 3 × 30 s/côté"]]},
+    {t:"muscu", n:"Circuit kettlebell / haltère", ex:[["🔥 Échauffement","5 min rameur"],["Circuit 5 tours · repos 60 s",""],["1. Swings kettlebell","× 15"],["2. Goblet squat","× 12"],["3. Poussée d'épaules","× 10"],["4. Farmer walk","30 m"],["5. Corde à sauter","45 s"]]},
+    {t:"cardio", n:"Sac de boxe + corde", ex:[["Échauffement","corde à sauter 3 min"],["Sac de boxe","6 rounds de 2 min / repos 1 min"],["Finisher corde à sauter","3 × 1 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche extérieure","45–60 min"],["Étirements","15 min"]]}
+  ],
+  cardio: [
+    {t:"cardio", n:"Tapis roulant — intervalles", ex:[["Échauffement","5 min marche rapide"],["Intervalles","8 × (1 min course rapide / 1 min marche)"],["Option inclinaison","5 min marche pente 8-10 %"],["Retour au calme","5 min"]]},
+    {t:"cardio", n:"Rameur — pyramide", ex:[["Échauffement","5 min cadence légère"],["Pyramide","250 m → 500 m → 750 m → 500 m → 250 m"],["Repos entre paliers","1 min"],["Technique","jambes → tronc → bras, jamais l'inverse"]]},
+    {t:"cardio", n:"Sac de boxe + corde à sauter", ex:[["Échauffement","corde à sauter 3 min + épaules"],["Sac de boxe","6 rounds de 3 min / repos 1 min"],["Combos","jab-cross, crochets, esquives — reste léger sur les appuis"],["Finisher","corde à sauter 3 × 2 min"]]},
+    {t:"cardio", n:"Elliptique + ballon suisse", ex:[["Elliptique","35 min zone 2 (conversation possible)"],["Gainage sur ballon suisse","planche 3 × 45 s"],["Crunchs sur ballon","3 × 15"]]},
+    {t:"cardio", n:"Vélo — sprints", ex:[["Échauffement","5 min souple"],["Sprints","10 × (30 s à fond / 90 s souple)"],["Retour au calme","5 min"]]},
+    {t:"cardio", n:"Trampoline + médecine-ball + haltères", ex:[["Trampoline","15 min (course, jumping jacks, twists)"],["Slams médecine-ball","3 × 15"],["Wall balls","3 × 12"],["Complexe haltères légers","3 × (8 squats + 8 poussées + 8 rowings)"]]},
+    {t:"repos", n:"Récupération", ex:[["Marche longue","60 min"],["Ou repos complet + étirements","20 min"]]}
+  ],
+  calisthenie: [
+    {t:"muscu", n:"Push — pousser", ex:[["🔥 Échauffement","rotations épaules + 2 × 5 pompes lentes"],["Pompes","4 × max (garde 2 reps en réserve)"],["Pompes déclinées (pieds surélevés)","3 × 10"],["Dips (banc ou barres)","3 × 8"],["Pompes piquées (pike)","3 × 8"],["Planche","3 × 45 s"],["💤 Repos","90 s"]]},
+    {t:"muscu", n:"Pull — tirer", ex:[["🔥 Échauffement","suspension barre 2 × 20 s"],["Tractions (ou australiennes)","4 × max"],["Chin-ups (supination)","3 × max"],["Rowing australien","3 × 12"],["Hollow hold","3 × 30 s"],["💤 Repos","90 s–2 min"]]},
+    {t:"muscu", n:"Legs — jambes", ex:[["🔥 Échauffement","squats à vide 2 × 15"],["Squats sautés","4 × 12"],["Fentes","3 × 12/jambe"],["Pistols assistés (au cadre/TRX)","3 × 5/jambe"],["Mollets sur marche","4 × 20"],["Pont fessier","3 × 15"]]},
+    {t:"repos", n:"Repos ou mobilité", ex:[["Mobilité épaules/hanches","20 min"]]},
+    {t:"muscu", n:"Full body", ex:[["🔥 Échauffement","jumping jacks 3 min"],["Burpees","3 × 12"],["Pompes archer (ou normales)","3 × 8"],["Tractions","3 × max"],["Squats bulgares","3 × 10/jambe"],["L-sit (ou genoux relevés)","3 × max"]]},
+    {t:"muscu", n:"Core + skills", ex:[["Handstand contre le mur","5 × 30 s"],["Planche latérale","3 × 40 s/côté"],["Relevés de jambes suspendu","3 × 12"],["Superman","3 × 15"],["Travail libre (crow, tuck planche…)","10 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche","45 min"],["Étirements complets","15 min"]]}
+  ],
+  maison: [
+    {t:"muscu", n:"Full body A (maison)", ex:[["🔥 Échauffement","montées de genoux 2 min + rotations"],["Squats (goblet si haltère)","4 × 15"],["Pompes (sur genoux si besoin)","4 × 10"],["Rowing haltère / élastique / sac à dos chargé","4 × 12"],["Planche","3 × 40 s"],["💤 Repos","60-90 s"]]},
+    {t:"cardio", n:"Cardio maison", ex:[["Circuit 20 min : enchaîne sans pause longue",""],["Jumping jacks","45 s"],["Montées d'escaliers (ou genoux)","1 min"],["Corde à sauter (ou imitation)","45 s"],["Repos","30 s — répète 8 tours"]]},
+    {t:"muscu", n:"Full body B (maison)", ex:[["🔥 Échauffement","2 min marche rapide sur place"],["Fentes","4 × 12/jambe"],["Développé haltères (ou pompes surélevées)","3 × 12"],["Soulevé roumain haltères (ou bouteilles)","3 × 12"],["Gainage latéral","3 × 30 s/côté"]]},
+    {t:"repos", n:"Repos", ex:[["Marche extérieure","30 min"]]},
+    {t:"muscu", n:"Full body C (maison)", ex:[["🔥 Échauffement","2 min jumping jacks"],["Hip thrust (dos sur canapé)","4 × 15"],["Pompes prise serrée","3 × 10"],["Curl + extension (haltères/élastique)","3 × 12"],["Mountain climbers","3 × 30 s"]]},
+    {t:"cardio", n:"HIIT sans matériel + abdos", ex:[["HIIT 20 min","8 × (30 s effort / 60 s repos) : burpees, squats sautés, climbers"],["Crunchs","3 × 15"],["Relevés de jambes","3 × 12"],["Planche","3 × 40 s"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche + étirements","30–45 min"]]}
   ]
 };
+/* Programme personnalisé : gabarit de départ (modifiable dans l'onglet Sport) */
+const CUSTOM_DEFAUT = JOURS_LMD.map(()=>({t:"repos", n:"À définir", ex:[]}));
 
 /* ─── Raisons d'écart et corrections associées ─── */
 const RAISONS = {
@@ -671,7 +748,8 @@ $("profilForm").addEventListener("submit", e=>{
     activite: +$("f-activite").value,
     objectif: $("f-objectif").value,
     cible: +$("f-cible").value,
-    debut: todayKey()
+    programme: $("f-programme").value,
+    debut: S.profil && S.profil.debut ? S.profil.debut : todayKey()
   };
   if(!S.poids.length) S.poids.push({d:todayKey(), kg:S.profil.poids});
   save();
@@ -717,7 +795,19 @@ function fillProfilForm(){
   $("f-sexe").value=p.sexe; $("f-age").value=p.age; $("f-poids").value=p.poids;
   $("f-taille").value=p.taille; $("f-activite").value=p.activite;
   $("f-objectif").value=p.objectif; $("f-cible").value=p.cible;
+  $("f-programme").value = p.programme || "auto";
   $("dangerZone").hidden = false;
+}
+/* Programme d'entraînement actif : choix explicite, sinon celui de l'objectif nutritionnel */
+function progKey(){
+  const p = S.profil;
+  const k = (p && p.programme) || "auto";
+  return k === "auto" ? p.objectif : k;
+}
+function progSessions(){
+  const k = progKey();
+  if(k === "custom") return S.custom || CUSTOM_DEFAUT;
+  return PROGRAMMES[k] || PROGRAMMES[S.profil.objectif];
 }
 function renderHeader(){
   $("headerGoal").textContent = S.profil ? GOALS[S.profil.objectif].label : "Bienvenue 👋";
@@ -776,7 +866,7 @@ function renderDash(){
   renderJournal(c);
 
   // séance du jour
-  const seance = PROGRAMMES[p.objectif][dow];
+  const seance = progSessions()[dow];
   $("d-seance").innerHTML = seanceHTML(seance, dow, true);
   bindSeanceChecks();
 }
@@ -879,7 +969,8 @@ function seanceHTML(s, dow, todayFlag){
         <span class="tag ${tagCls}">${tagTxt}</span>
       </div>
       <div class="wbody">
-        <table>${s.ex.map(e=>`<tr><td>${e[0]}</td><td style="text-align:right">${e[1]}</td></tr>`).join("")}</table>
+        ${s.ex.length ? `<table>${s.ex.map(e=>`<tr><td>${e[0]}</td><td style="text-align:right">${e[1]}</td></tr>`).join("")}</table>`
+          : `<p class="muted small">Aucun exercice défini — bâtis cette séance dans l'onglet Sport (🛠️ Mon programme).</p>`}
         ${s.t!=="repos" ? `
         <label class="done-check">
           <input type="checkbox" data-skey="${key}" ${done?"checked":""}>
@@ -899,12 +990,64 @@ function bindSeanceChecks(){
 }
 function renderTraining(){
   const p = S.profil; if(!p) return;
-  const g = GOALS[p.objectif];
-  $("t-goal").textContent = g.label;
-  $("t-desc").textContent = g.desc;
+  const k = progKey();
+  const info = PROG_INFO[k] || PROG_INFO[p.objectif];
+  $("t-goal").textContent = info.label;
+  $("t-desc").textContent = info.desc;
+  $("progSelect").value = p.programme || "auto";
   const dow = (new Date().getDay()+6)%7;
-  $("trainingList").innerHTML = PROGRAMMES[p.objectif].map((s,i)=>seanceHTML(s,i,i===dow)).join("");
+  $("trainingList").innerHTML = progSessions().map((s,i)=>seanceHTML(s,i,i===dow)).join("");
   bindSeanceChecks();
+  renderCustomEditor(k === "custom");
+}
+$("progSelect").addEventListener("change", ()=>{
+  S.profil.programme = $("progSelect").value;
+  save();
+  renderTraining();
+});
+/* ─── Éditeur du programme personnalisé ─── */
+function renderCustomEditor(showIt){
+  const ed = $("customEditor");
+  ed.hidden = !showIt;
+  if(!showIt){ ed.innerHTML=""; return; }
+  const data = S.custom || CUSTOM_DEFAUT;
+  ed.innerHTML = `
+    <p class="muted small">Un exercice par ligne, au format <b>Nom | séries × reps</b> (ex. : <i>Squat | 4 × 10</i>).</p>
+    ${JOURS_LMD.map((j,i)=>{
+      const d = data[i] || {t:"repos", n:"", ex:[]};
+      return `
+      <div class="meal" style="margin-top:10px;">
+        <div class="row2">
+          <div>
+            <label>${j} — type</label>
+            <select data-ct="${i}">
+              <option value="muscu" ${d.t==="muscu"?"selected":""}>Musculation</option>
+              <option value="cardio" ${d.t==="cardio"?"selected":""}>Cardio</option>
+              <option value="repos" ${d.t==="repos"?"selected":""}>Repos</option>
+            </select>
+          </div>
+          <div>
+            <label>Nom de la séance</label>
+            <input type="text" data-cn="${i}" value="${(d.n||"").replace(/"/g,"&quot;")}" placeholder="Ex. : Push, HIIT vélo…">
+          </div>
+        </div>
+        <label>Exercices</label>
+        <textarea data-cx="${i}" rows="4" placeholder="Développé couché | 4 × 8&#10;Rowing barre | 4 × 10">${(d.ex||[]).map(e=>e[1]?e[0]+" | "+e[1]:e[0]).join("\n")}</textarea>
+      </div>`;
+    }).join("")}
+    <button class="btn" id="customSave" type="button">💾 Enregistrer mon programme</button>`;
+  $("customSave").addEventListener("click", ()=>{
+    S.custom = JOURS_LMD.map((_,i)=>{
+      const t = ed.querySelector(`[data-ct="${i}"]`).value;
+      const n = ed.querySelector(`[data-cn="${i}"]`).value.trim() || (t==="repos"?"Repos":"Séance");
+      const ex = ed.querySelector(`[data-cx="${i}"]`).value.split("\n")
+        .map(l=>l.trim()).filter(Boolean)
+        .map(l=>{ const parts = l.split("|").map(x=>x.trim()); return [parts[0], parts[1]||""]; });
+      return {t, n, ex};
+    });
+    save();
+    renderTraining();
+  });
 }
 
 /* ════════════════════════════════ EAU / PAS ════════════════════════════════ */

@@ -424,6 +424,15 @@
       <div id="repasList"></div>
     </div>
     <div class="card">
+      <h2>📖 Mes recettes — sections personnalisées</h2>
+      <p class="muted small">Crée tes propres sections (smoothies, desserts protéinés, plats express, recettes de famille…) et remplis-les de recettes. Chaque recette peut être ajoutée au journal du jour en un clic.</p>
+      <div class="row2" style="margin-top:10px;">
+        <input type="text" id="secNom" placeholder="Nom de la section" maxlength="60">
+        <button class="btn small-btn" style="width:100%; padding:11px;" id="secAdd" type="button">➕ Ajouter la section</button>
+      </div>
+      <div id="secList" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
       <h2>💡 Règles simples</h2>
       <ul class="muted" style="margin-left:18px; font-size:.85rem; line-height:1.7;">
         <li>Protéines à chaque repas (~<span id="r-prot"></span> g/jour au total).</li>
@@ -996,7 +1005,8 @@ $("importFile").addEventListener("change", e=>{
       if(!data || typeof data !== "object" || !("profil" in data) || !Array.isArray(data.poids))
         throw new Error("format");
       if(!confirm("Remplacer les données actuelles par cette sauvegarde ?")) return;
-      S = {profil:data.profil, poids:data.poids, jours:data.jours||{}, seances:data.seances||{}};
+      S = {profil:data.profil, poids:data.poids, jours:data.jours||{}, seances:data.seances||{},
+           custom:data.custom||null, routine:data.routine||null, recettes:data.recettes||[]};
       save();
       location.reload();
     }catch(err){ alert("Fichier de sauvegarde invalide."); }
@@ -1322,7 +1332,106 @@ function renderRepas(){
     repasDay = +b.dataset.d; renderRepas();
   }));
   $("repasList").innerHTML = `<p class="muted small" style="margin-bottom:8px;">${JOURS_LMD[repasDay]}</p>` + mealHTML(repasDay, c, false);
+  renderSections();
 }
+
+/* ════════════════════════════════ MES RECETTES (sections personnalisées) ════════════════════════════════ */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function mesRecettes(){ if(!S.recettes) S.recettes = []; return S.recettes; }
+let secOuverte = null;
+
+function renderSections(){
+  const list = mesRecettes();
+  $("secList").innerHTML = list.length ? list.map((sec,si)=>`
+    <div class="wday ${secOuverte===si?"open":""}">
+      <div class="whead" data-sechead="${si}">
+        <h4>📂 ${esc(sec.nom)} <span class="muted small">— ${sec.items.length} recette${sec.items.length>1?"s":""}</span></h4>
+        <button class="del" data-secdel="${si}" title="Supprimer la section">✕</button>
+      </div>
+      <div class="wbody">
+        ${sec.items.map((r,ri)=>`
+          <div class="meal">
+            <div class="mhead">
+              <div><h4>${esc(r.n)}</h4></div>
+              <div class="kcal">${r.k} kcal${r.p?` · ${r.p} g prot.`:""}</div>
+            </div>
+            ${r.i ? `<ul>${r.i.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+            ${r.prep ? `<div class="prep">${esc(r.prep)}</div>` : ""}
+            <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+              <button type="button" class="eat-btn" data-secjournal="${si}:${ri}">➕ Au journal du jour</button>
+              <button type="button" class="del" data-secrdel="${si}:${ri}" title="Supprimer la recette">✕</button>
+            </div>
+          </div>`).join("") || `<p class="muted small">Section vide — ajoute ta première recette ci-dessous.</p>`}
+        <h3>➕ Nouvelle recette dans « ${esc(sec.nom)} »</h3>
+        <input data-rn="${si}" type="text" placeholder="Nom de la recette" maxlength="80">
+        <div class="row2" style="margin-top:8px;">
+          <input data-rk="${si}" type="number" placeholder="Calories (kcal)" min="0" max="4000">
+          <input data-rp="${si}" type="number" placeholder="Protéines (g, optionnel)" min="0" max="300">
+        </div>
+        <textarea data-ri="${si}" rows="3" placeholder="Ingrédients (un par ligne)" style="margin-top:8px;"></textarea>
+        <textarea data-rprep="${si}" rows="2" placeholder="Préparation (optionnel)" style="margin-top:8px;"></textarea>
+        <button type="button" class="btn secondary" data-radd="${si}">Ajouter la recette</button>
+      </div>
+    </div>`).join("")
+    : `<p class="muted small">Aucune section pour l'instant — crée la première ci-dessus.</p>`;
+
+  // ouvrir / fermer une section (sauf clic sur ✕)
+  $("secList").querySelectorAll("[data-sechead]").forEach(h=>h.addEventListener("click", e=>{
+    if(e.target.closest("[data-secdel]")) return;
+    const si = +h.dataset.sechead;
+    secOuverte = secOuverte===si ? null : si;
+    renderSections();
+  }));
+  $("secList").querySelectorAll("[data-secdel]").forEach(b=>b.addEventListener("click", ()=>{
+    const si = +b.dataset.secdel;
+    const sec = mesRecettes()[si];
+    if(confirm(`Supprimer la section « ${sec.nom} » et ses ${sec.items.length} recette(s) ?`)){
+      mesRecettes().splice(si,1);
+      if(secOuverte===si) secOuverte = null;
+      save(); renderSections();
+    }
+  }));
+  $("secList").querySelectorAll("[data-secrdel]").forEach(b=>b.addEventListener("click", ()=>{
+    const [si,ri] = b.dataset.secrdel.split(":").map(Number);
+    mesRecettes()[si].items.splice(ri,1);
+    save(); renderSections();
+  }));
+  $("secList").querySelectorAll("[data-secjournal]").forEach(b=>b.addEventListener("click", ()=>{
+    const [si,ri] = b.dataset.secjournal.split(":").map(Number);
+    const r = mesRecettes()[si].items[ri];
+    jourData(todayKey()).extra.push({n:r.n, k:r.k});
+    save();
+    b.textContent = "✔ Ajouté au journal";
+    b.classList.add("eaten");
+    setTimeout(()=>{ b.textContent = "➕ Au journal du jour"; b.classList.remove("eaten"); }, 1800);
+  }));
+  $("secList").querySelectorAll("[data-radd]").forEach(b=>b.addEventListener("click", ()=>{
+    const si = +b.dataset.radd;
+    const g = a => $("secList").querySelector(`[data-${a}="${si}"]`);
+    const n = g("rn").value.trim();
+    const k = Math.round(+g("rk").value);
+    if(!n){ alert("Donne un nom à la recette."); return; }
+    if(!k || k<=0 || k>4000){ alert("Entre les calories de la recette."); return; }
+    const item = {n, k};
+    const p = Math.round(+g("rp").value);
+    if(p>0) item.p = p;
+    const ing = g("ri").value.trim();
+    if(ing) item.i = ing;
+    const prep = g("rprep").value.trim();
+    if(prep) item.prep = prep;
+    mesRecettes()[si].items.push(item);
+    save(); renderSections();
+  }));
+}
+$("secAdd").addEventListener("click", ()=>{
+  const nom = $("secNom").value.trim();
+  if(!nom){ alert("Donne un nom à la section (ex. : Smoothies, Desserts protéinés…)."); return; }
+  if(mesRecettes().some(s=>s.nom.toLowerCase()===nom.toLowerCase())){ alert("Cette section existe déjà."); return; }
+  mesRecettes().push({nom, items:[]});
+  secOuverte = mesRecettes().length-1;
+  $("secNom").value = "";
+  save(); renderSections();
+});
 
 /* ════════════════════════════════ ENTRAÎNEMENT ════════════════════════════════ */
 function seanceKey(dow){

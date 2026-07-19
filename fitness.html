@@ -264,6 +264,17 @@
         </select>
         <label>Poids désiré (kg)</label>
         <input type="number" id="f-cible" min="35" max="300" step="0.1" required>
+        <div class="row2">
+          <div>
+            <label>% de gras actuel</label>
+            <input type="number" id="f-gras" min="3" max="60" step="0.1" placeholder="Auto (estimé)">
+          </div>
+          <div>
+            <label>% de gras désiré</label>
+            <input type="number" id="f-gras-cible" min="3" max="60" step="0.1" placeholder="Auto (recommandé)">
+          </div>
+        </div>
+        <p class="muted small" style="margin-top:4px;">Laisse vide si tu ne le connais pas : l'app estime ton % actuel (formule Deurenberg) et recommande la cible selon ton but.</p>
         <label>Repas par jour</label>
         <select id="f-repas">
           <option value="auto" selected>🤖 Recommandé par l'app (selon mon but)</option>
@@ -449,11 +460,13 @@
   <!-- ═══════════ SUIVI ═══════════ -->
   <section class="view" id="view-suivi">
     <div class="card">
-      <h2>⚖️ Suivi du poids</h2>
+      <h2>⚖️ Suivi du poids & % de gras</h2>
       <div class="row2">
         <input type="number" id="poidsInput" placeholder="Poids (kg)" step="0.1" min="35" max="300">
-        <button class="btn small-btn" style="width:100%; padding:11px;" id="poidsSave" type="button">Enregistrer la pesée</button>
+        <input type="number" id="grasInput" placeholder="% gras (optionnel)" step="0.1" min="3" max="60">
       </div>
+      <button class="btn" id="poidsSave" type="button" style="margin-top:10px;">Enregistrer la pesée</button>
+      <p class="muted small" style="margin-top:6px;">📅 Mesure les deux chaque lundi matin à jeun — c'est ce qui permet de voir si tu perds du gras ou du muscle.</p>
       <div id="analyse" style="margin-top:12px;"></div>
       <div style="margin-top:8px;"><svg class="chart" id="chart" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet"></svg></div>
       <h3>Historique</h3>
@@ -540,6 +553,12 @@ const MEAL_W = { dej:30, lun:35, col:12, din:38 };
 const MEAL_LABELS = { dej:"☀️ Petit déjeuner", lun:"🥗 Déjeuner", col:"🍎 Collation", din:"🌙 Souper" };
 /* Structure recommandée par l'app selon l'objectif */
 const MEALS_AUTO = { shred:"3", perte:"2", muscu:"4", masse:"4" };
+
+/* ─── % de gras corporel cible recommandé selon l'objectif et le sexe ─── */
+const GRAS_RECO = {
+  h: { shred:11, perte:16, muscu:14, masse:16 },
+  f: { shred:19, perte:24, muscu:22, masse:24 }
+};
 
 /* ─── Recettes : 7 petits déjeuners + 7 dîners par famille d'objectif.
    kcal/prot = valeurs de base pour 1 portion; l'app affiche un facteur de portion. ─── */
@@ -894,9 +913,22 @@ function calc(){
   const split = {};
   struct.meals.forEach(m => split[m] = MEAL_W[m]/wTotal);
 
+  // % de gras : dernière mesure enregistrée, sinon profil, sinon estimation (Deurenberg)
+  let gras = null, grasEst = false;
+  for(let i=S.poids.length-1; i>=0; i--){ if(S.poids[i].gras){ gras = S.poids[i].gras; break; } }
+  if(gras === null && p.gras) gras = p.gras;
+  if(gras === null){
+    const bmi = poids / Math.pow(p.taille/100, 2);
+    gras = Math.round((1.2*bmi + 0.23*p.age - 10.8*(p.sexe==="h"?1:0) - 5.4)*10)/10;
+    grasEst = true;
+  }
+  const grasCibleAuto = !(p.grasCible > 0);
+  const grasCible = grasCibleAuto ? GRAS_RECO[p.sexe][p.objectif] : p.grasCible;
+
   return {g, poids, tdee, cal, prot, gluc, lip, eauL, diff, etaSem,
           rate, clamped, periodeSem, structKey, struct, split,
-          repasAuto: !(p.repas && p.repas !== "auto")};
+          repasAuto: !(p.repas && p.repas !== "auto"),
+          gras, grasEst, grasCible, grasCibleAuto};
 }
 
 /* ════════════════════════════════ NAVIGATION ════════════════════════════════ */
@@ -926,6 +958,8 @@ $("profilForm").addEventListener("submit", e=>{
     activite: +$("f-activite").value,
     objectif: $("f-objectif").value,
     cible: +$("f-cible").value,
+    gras: +$("f-gras").value || null,
+    grasCible: +$("f-gras-cible").value || null,
     repas: $("f-repas").value,
     periode: $("f-periode").value === "perso" ? (+$("f-periode-sem").value || "auto") : $("f-periode").value,
     programme: $("f-programme").value,
@@ -975,6 +1009,8 @@ function fillProfilForm(){
   $("f-sexe").value=p.sexe; $("f-age").value=p.age; $("f-poids").value=p.poids;
   $("f-taille").value=p.taille; $("f-activite").value=p.activite;
   $("f-objectif").value=p.objectif; $("f-cible").value=p.cible;
+  if(p.gras) $("f-gras").value = p.gras;
+  if(p.grasCible) $("f-gras-cible").value = p.grasCible;
   $("f-repas").value = p.repas || "auto";
   const per = p.periode || "auto";
   if(per === "auto" || ["13","26","52"].includes(String(per))){ $("f-periode").value = String(per); }
@@ -1045,6 +1081,7 @@ function renderDash(){
     <div class="entry"><span class="muted">🎯 Objectif</span><b>${c.g.label} → ${fmt1(p.cible)} kg</b></div>
     <div class="entry"><span class="muted">⏱️ Période</span><b>${perTxt}${c.clamped ? " ⚠️" : ""}</b></div>
     <div class="entry"><span class="muted">📉 Rythme visé</span><b>${c.rate>0?"+":""}${fmt1(c.rate)} kg/sem. (${delta2>0?"+":""}${delta2} kcal/j)</b></div>
+    <div class="entry"><span class="muted">🧈 % de gras</span><b>${fmt1(c.gras)} %${c.grasEst?" (estimé)":""} → ${fmt1(c.grasCible)} %${c.grasCibleAuto?" 🤖":""}</b></div>
     <div class="entry"><span class="muted">🍽️ Alimentation</span><b>${c.struct.label}${c.repasAuto ? " 🤖" : ""}</b></div>
     <div class="entry"><span class="muted">🏋️ Entraînement</span><b>${(PROG_INFO[progK]||PROG_INFO[p.objectif]).label}${(!p.programme || p.programme==="auto") ? " 🤖" : ""}</b></div>
     ${c.clamped ? `<p class="muted small" style="margin-top:8px;">⚠️ La période demandée exigeait un rythme trop agressif : je l'ai plafonné à un niveau sain (max 1 kg/sem. en perte, 0,4 kg/sem. en prise). L'échéance réelle est celle affichée plus haut.</p>` : ""}
@@ -1066,7 +1103,7 @@ function renderDash(){
   const mondayK = mondayD.toISOString().slice(0,10);
   const weighThisWeek = S.poids.some(e=>e.d >= mondayK);
   if(nowD.getDay()===1 && !S.poids.some(e=>e.d===todayKey())){
-    $("d-banner").innerHTML = `<div class="banner-lundi">⚖️ <b>C'est lundi !</b> Pèse-toi ce matin à jeun et enregistre ta pesée dans l'onglet Suivi — c'est elle qui pilote ton plan.</div>`;
+    $("d-banner").innerHTML = `<div class="banner-lundi">⚖️ <b>C'est lundi !</b> Pèse-toi ce matin à jeun (poids + % de gras si ta balance l'affiche) et enregistre le tout dans l'onglet Suivi — c'est ce qui pilote ton plan.</div>`;
   } else if(!weighThisWeek && S.poids.length){
     $("d-banner").innerHTML = `<div class="banner-lundi" style="border-color:rgba(251,191,36,.5); background:rgba(251,191,36,.08);">⚠️ <b>Pesée du lundi manquée.</b> Pèse-toi demain matin à jeun pour garder ton suivi fiable.</div>`;
   } else {
@@ -1101,7 +1138,7 @@ function renderRoutine(c){
   // pesée hebdomadaire du lundi matin
   if(now.getDay() === 1){
     items.push({h:r.times.pesee||"07:00", icon:"⚖️", label:"Pesée hebdomadaire (à jeun)",
-      sub:"Chaque lundi matin — enregistre-la dans Suivi", done:S.poids.some(e=>e.d===todayKey()), auto:true});
+      sub:"Poids + % de gras — enregistre dans Suivi", done:S.poids.some(e=>e.d===todayKey()), auto:true});
   }
   // repas du plan
   mealsFor(dow, c).forEach(m=>{
@@ -1402,20 +1439,22 @@ let pendingWeigh = null;
 $("poidsSave").addEventListener("click", ()=>{
   const kg = +$("poidsInput").value;
   if(!kg || kg<35 || kg>300){ alert("Entre un poids valide."); return; }
+  const gras = +$("grasInput").value;
   pendingWeigh = {d:todayKey(), kg};
+  if(gras >= 3 && gras <= 60) pendingWeigh.gras = Math.round(gras*10)/10;
   const verdict = analyseTendance(kg);
   if(verdict && verdict.level!=="ok"){
     openReasonModal(verdict);
   } else {
     commitWeigh(null, "");
   }
-  $("poidsInput").value="";
+  $("poidsInput").value=""; $("grasInput").value="";
 });
 
 function commitWeigh(raisons, note){
   if(!pendingWeigh) return;
   const existing = S.poids.find(e=>e.d===pendingWeigh.d);
-  if(existing){ existing.kg = pendingWeigh.kg; if(raisons) existing.raisons=raisons; if(note) existing.note=note; }
+  if(existing){ existing.kg = pendingWeigh.kg; if(pendingWeigh.gras) existing.gras = pendingWeigh.gras; if(raisons) existing.raisons=raisons; if(note) existing.note=note; }
   else {
     const e = {...pendingWeigh};
     if(raisons && raisons.length) e.raisons = raisons;
@@ -1524,7 +1563,7 @@ function renderSuivi(){
   } else {
     html = `<div class="alert ok"><b>👋 Première pesée enregistrée</b>Pèse-toi 2-3 fois par semaine, le matin à jeun, pour que l'analyse devienne fiable.</div>`;
   }
-  $("analyse").innerHTML = html;
+  $("analyse").innerHTML = html + analyseGrasHTML(c);
 
   renderAlertes(c);
   drawChart();
@@ -1539,7 +1578,7 @@ function renderSuivi(){
     const arrow = d===null ? "" : (d<0?"▼ ":d>0?"▲ ":"＝ ") + fmt1(Math.abs(d)) + " kg";
     return `<div class="entry">
       <div>
-        <div><b>${fmt1(e.kg)} kg</b> <span class="delta ${cls}">${arrow}</span></div>
+        <div><b>${fmt1(e.kg)} kg</b> <span class="delta ${cls}">${arrow}</span>${e.gras?` <span class="muted small">· 🧈 ${fmt1(e.gras)} %</span>`:""}</div>
         <div class="d">${new Date(e.d+"T12:00").toLocaleDateString("fr-CA",{weekday:"short",day:"numeric",month:"short"})}</div>
         ${e.raisons?`<div class="reason">⚠ ${e.raisons.join(", ")}</div>`:""}
         ${e.note?`<div class="reason" style="color:var(--muted)">📝 ${e.note}</div>`:""}
@@ -1567,6 +1606,60 @@ function renderSuivi(){
 
   drawBars($("barsPas"), "pas", c.g.pas, v=>Math.round(v/1000)+"k");
   drawBars($("barsEau"), "eau", c.eauL*1000, v=>fmt1(v/1000)+" L");
+}
+
+/* ─── Analyse de composition corporelle : évolution muscle vs gras entre deux mesures ─── */
+function analyseGrasHTML(c){
+  const mesures = S.poids.filter(e=>e.gras);
+  if(mesures.length === 0){
+    return `<div class="alert warn"><b>🧈 % de gras non mesuré</b>Ton % actuel est estimé à ${fmt1(c.gras)} % (formule Deurenberg) — cible : ${fmt1(c.grasCible)} %. Mesure-le chaque lundi avec ta pesée (balance à impédance ou pince) pour une analyse muscle vs gras précise.</div>`;
+  }
+  const last = mesures[mesures.length-1];
+  let html = "";
+  // objectif de % de gras atteint ?
+  const versLeBas = c.grasCible <= (S.profil.gras || last.gras);
+  if((versLeBas && last.gras <= c.grasCible) || (!versLeBas && last.gras >= c.grasCible)){
+    html += `<div class="alert ok"><b>🎉 Objectif de % de gras atteint !</b>${fmt1(last.gras)} % vs cible de ${fmt1(c.grasCible)} %. Passe en maintien ou fixe une nouvelle cible dans Profil.</div>`;
+  }
+  if(mesures.length < 2){
+    return html + `<div class="alert ok"><b>🧈 Première mesure enregistrée : ${fmt1(last.gras)} %</b>Cible : ${fmt1(c.grasCible)} %${c.grasCibleAuto?" (recommandée selon ton but 🤖)":""}. Refais la mesure chaque lundi matin, même conditions, pour suivre l'évolution muscle vs gras.</div>`;
+  }
+  // composition : comparer les 2 dernières mesures
+  const a = mesures[mesures.length-2], b = last;
+  const lbmA = a.kg*(1-a.gras/100), lbmB = b.kg*(1-b.gras/100);
+  const dM = lbmB - lbmA;               // Δ masse maigre (muscle)
+  const dF = (b.kg-lbmB) - (a.kg-lbmA); // Δ masse grasse
+  const compo = `Entre le ${new Date(a.d+"T12:00").toLocaleDateString("fr-CA",{day:"numeric",month:"short"})} et le ${new Date(b.d+"T12:00").toLocaleDateString("fr-CA",{day:"numeric",month:"short"})} : <b>muscle ${dM>=0?"+":""}${fmt1(dM)} kg</b>, <b>gras ${dF>=0?"+":""}${fmt1(dF)} kg</b>.`;
+
+  if(c.rate < 0){ // phase de perte / sèche
+    if(dM <= -0.4){
+      html += `<div class="alert bad"><b>⚠️ Tu perds du muscle, pas seulement du gras</b>${compo}<ul>
+        <li>🍽️ Monte les protéines : vise ${c.prot} g/jour, répartis sur chaque repas.</li>
+        <li>🍽️ Ralentis le déficit : ajoute 150 kcal/jour.</li>
+        <li>🏋️ Garde des charges lourdes en musculation — c'est le signal qui dit au corps de conserver le muscle.</li>
+        <li>😴 Dors 7-8 h : le manque de sommeil fait fondre le muscle en déficit.</li></ul></div>`;
+    } else if(dF < -0.1){
+      html += `<div class="alert ok"><b>💪 Perte propre : le gras part, le muscle reste</b>${compo} C'est exactement le but — continue tel quel.</div>`;
+    } else {
+      html += `<div class="alert warn"><b>🧈 Gras stable sur les 2 dernières mesures</b>${compo} Les mesures d'impédance varient beaucoup : refais-la lundi matin à jeun, même conditions, avant de changer quoi que ce soit.</div>`;
+    }
+  } else if(c.rate > 0){ // prise de masse
+    if(dF > 0.4 && dF > dM){
+      html += `<div class="alert warn"><b>⚠️ Ta prise est trop grasse</b>${compo}<ul>
+        <li>🍽️ Réduis le surplus de 150-200 kcal/jour.</li>
+        <li>🏋️ Vérifie ta surcharge progressive : sans progression aux charges, le surplus devient du gras.</li>
+        <li>👟 Ajoute 2 000 pas quotidiens pour tamponner le surplus.</li></ul></div>`;
+    } else {
+      html += `<div class="alert ok"><b>💪 Prise propre : le muscle monte plus vite que le gras</b>${compo} Continue, c'est une prise de masse réussie.</div>`;
+    }
+  } else { // recomposition / maintien
+    if(dM > 0.1 && dF < -0.1){
+      html += `<div class="alert ok"><b>🏆 Recomposition parfaite : +muscle, −gras à poids stable</b>${compo}</div>`;
+    } else {
+      html += `<div class="alert ok"><b>🧈 Composition suivie</b>${compo} En recomposition, les changements sont lents : juge sur 4-6 semaines.</div>`;
+    }
+  }
+  return html;
 }
 
 /* ─── Alertes de routine : entraînements sautés, pas, eau, repas, pesée du lundi ─── */
@@ -1710,9 +1803,20 @@ function drawChart(){
   S.poids.forEach(e=>{
     out += `<circle cx="${X(e.d)}" cy="${Y(e.kg)}" r="4" fill="#34d399" stroke="#0f1420" stroke-width="2"/>`;
   });
+  // courbe % de gras (échelle propre)
+  const gpts = S.poids.filter(e=>e.gras);
+  if(gpts.length >= 2){
+    const gMin = Math.min(...gpts.map(e=>e.gras))-1, gMax = Math.max(...gpts.map(e=>e.gras))+1;
+    const GY = v => mT + (1-(v-gMin)/(gMax-gMin)) * (H-mT-mB);
+    out += `<polyline points="${gpts.map(e=>`${X(e.d)},${GY(e.gras)}`).join(" ")}" fill="none" stroke="#fb923c" stroke-width="2" stroke-dasharray="5 4" opacity=".9"/>`;
+    gpts.forEach(e=>{ out += `<circle cx="${X(e.d)}" cy="${GY(e.gras)}" r="3" fill="#fb923c"/>`; });
+    const lastG = gpts[gpts.length-1];
+    out += `<text x="${Math.min(X(lastG.d)+6, W-mR-46)}" y="${GY(lastG.gras)-7}" fill="#fb923c" font-size="11">${fmt1(lastG.gras)} %</text>`;
+  }
   // légende
   out += `<text x="${mL}" y="${H-6}" fill="#34d399" font-size="11">● Réel</text>`;
   out += `<text x="${mL+64}" y="${H-6}" fill="#0ea5e9" font-size="11">╌ Prévu</text>`;
+  if(gpts.length >= 2) out += `<text x="${mL+134}" y="${H-6}" fill="#fb923c" font-size="11">╌ % gras</text>`;
   svg.innerHTML = out;
 }
 

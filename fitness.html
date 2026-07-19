@@ -185,6 +185,24 @@
   .kcal-left{font-size:1.5rem; font-weight:800;}
   .kcal-left.over{color:var(--bad);}
   .pbar>div.over{background:linear-gradient(90deg,#f87171,#fb923c);}
+  /* routine */
+  .rt-item{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); cursor:default;}
+  .rt-item:last-child{border-bottom:none;}
+  .rt-item.clickable{cursor:pointer;}
+  .rt-time{
+    flex:0 0 auto; font-size:.75rem; font-weight:700; background:var(--card2); border:1px solid var(--line);
+    padding:4px 9px; border-radius:8px; color:var(--accent2); font-variant-numeric:tabular-nums;
+  }
+  .rt-item.late .rt-time{color:var(--warn); border-color:rgba(251,191,36,.5);}
+  .rt-item.done{opacity:.55;}
+  .rt-item.done .rt-time{color:var(--accent);}
+  .rt-label{flex:1; font-size:.86rem;}
+  .rt-label .sub{display:block; font-size:.72rem; color:var(--muted);}
+  .rt-check{font-size:1.05rem; width:24px; text-align:center;}
+  .banner-lundi{
+    background:rgba(14,165,233,.1); border:1px solid rgba(14,165,233,.4); border-radius:12px;
+    padding:11px 14px; font-size:.85rem; margin-bottom:14px;
+  }
   @media (min-width:640px){
     .modal-bg{align-items:center;}
     .modal{border-radius:20px;}
@@ -300,6 +318,13 @@
 
   <!-- ═══════════ TABLEAU DE BORD ═══════════ -->
   <section class="view" id="view-dash">
+    <div id="d-banner"></div>
+    <div class="card">
+      <h2>🕐 Ma routine du jour</h2>
+      <div id="routineList"></div>
+      <button class="btn secondary" id="routineEditBtn" type="button" style="margin-top:10px;">⚙️ Personnaliser ma routine</button>
+      <div id="routineEditor" hidden style="margin-top:12px;"></div>
+    </div>
     <div class="card">
       <h2>🎯 Objectif calorique du jour</h2>
       <div class="stat-grid">
@@ -433,6 +458,10 @@
       <div style="margin-top:8px;"><svg class="chart" id="chart" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet"></svg></div>
       <h3>Historique</h3>
       <div id="poidsList"></div>
+    </div>
+    <div class="card">
+      <h2>🚨 Alertes de routine (7 derniers jours)</h2>
+      <div id="alertes"></div>
     </div>
     <div class="card">
       <h2>📊 7 derniers jours</h2>
@@ -769,6 +798,26 @@ const RAISONS = {
   ]
 };
 
+/* ─── Modifications recommandées quand le poids stagne, selon le programme d'entraînement ─── */
+const RECO_TRAIN = {
+  shred:      ["Ajoute 1 séance HIIT de 20 min, ou allonge le LISS de 10 min.","Réduis les repos entre séries à 45-60 s pour augmenter la dépense."],
+  perte:      ["Ajoute une 4e séance dans la semaine (une marche rapide de 45 min compte).","Passe tes cardios de 35 à 45 min."],
+  muscu:      ["Ajoute 10 min de cardio zone 2 après chaque séance du haut du corps.","Vérifie ta surcharge progressive : +2,5 kg ou +1 rep chaque semaine, sinon rien ne change."],
+  masse:      ["Garde le programme tel quel — si le poids ne monte pas, le problème est dans l'assiette, pas sous la barre.","Dors 7-8 h : c'est pendant le sommeil que le muscle se construit."],
+  graisse:    ["Passe de 4 à 5 tours sur les circuits, ou réduis les repos à 30 s.","Remplace un LISS par un HIIT cette semaine."],
+  cardio:     ["Allonge 2 séances de 10 min ou ajoute un intervalle de plus à chaque HIIT.","Ajoute 2 mini-séances de renfo (20 min) pour protéger ta masse musculaire."],
+  calisthenie:["Ajoute 1 série par exercice, ou passe aux variantes plus dures (déclinées, archer, lestées).","Ajoute 15 min de corde à sauter après 2 séances par semaine."],
+  maison:     ["Ajoute un tour de plus à tes circuits, ou réduis les pauses à 30 s.","Ajoute une marche rapide quotidienne de 20 min."],
+  custom:     ["Augmente le volume : +1 série par exercice ou +1 séance par semaine.","Ajoute 15-20 min de cardio en fin de séance."]
+};
+const RECO_NUTRI = {
+  perteDir: ["🍽️ Réduis de 150 kcal/jour : commence par les extras, sauces et boissons.","🍽️ Monte les protéines à chaque repas — elles coupent la faim et protègent le muscle.","🍽️ Essaie la structure « déjeuner + souper (16/8) » pendant 2-3 semaines si les grignotages dérapent."],
+  gainDir:  ["🍽️ Ajoute 200-300 kcal/jour : un shake gainer ou une collation de plus.","🍽️ Ajoute une collation avant le coucher (yogourt grec + granola + miel).","🍽️ Bois tes calories si manger plus est difficile : smoothie lait-avoine-fruits-protéine."]
+};
+
+/* ─── Routine quotidienne : horaires par défaut, personnalisables ─── */
+const ROUTINE_DEFAUT = { dej:"07:30", lun:"12:00", col:"15:30", din:"18:30", sport:"17:00", pesee:"07:00" };
+
 /* ════════════════════════════════ ÉTAT ════════════════════════════════ */
 let S = load();
 function load(){
@@ -787,7 +836,20 @@ function jourData(k){
   const j = S.jours[k];
   if(!j.mange) j.mange = {};
   if(!j.extra) j.extra = [];
+  if(!j.rout) j.rout = {};
   return j;
+}
+function routineTimes(){
+  if(!S.routine) S.routine = {times:{...ROUTINE_DEFAUT}, custom:[]};
+  if(!S.routine.times) S.routine.times = {...ROUTINE_DEFAUT};
+  if(!S.routine.custom) S.routine.custom = [];
+  return S.routine;
+}
+/* Clé de séance pour une date quelconque */
+function seanceKeyFor(date){
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - ((date.getDay()+6)%7));
+  return monday.toISOString().slice(0,10) + "#" + ((date.getDay()+6)%7);
 }
 const fmt1 = n => (Math.round(n*10)/10).toLocaleString("fr-CA");
 
@@ -998,6 +1060,22 @@ function renderDash(){
   $("d-pas-cible").textContent = c.g.pas.toLocaleString("fr-CA");
   $("d-pas-bar").style.width = Math.min(100, j.pas/c.g.pas*100)+"%";
 
+  // bannière pesée du lundi
+  const nowD = new Date();
+  const mondayD = new Date(nowD); mondayD.setDate(nowD.getDate()-((nowD.getDay()+6)%7));
+  const mondayK = mondayD.toISOString().slice(0,10);
+  const weighThisWeek = S.poids.some(e=>e.d >= mondayK);
+  if(nowD.getDay()===1 && !S.poids.some(e=>e.d===todayKey())){
+    $("d-banner").innerHTML = `<div class="banner-lundi">⚖️ <b>C'est lundi !</b> Pèse-toi ce matin à jeun et enregistre ta pesée dans l'onglet Suivi — c'est elle qui pilote ton plan.</div>`;
+  } else if(!weighThisWeek && S.poids.length){
+    $("d-banner").innerHTML = `<div class="banner-lundi" style="border-color:rgba(251,191,36,.5); background:rgba(251,191,36,.08);">⚠️ <b>Pesée du lundi manquée.</b> Pèse-toi demain matin à jeun pour garder ton suivi fiable.</div>`;
+  } else {
+    $("d-banner").innerHTML = "";
+  }
+
+  // routine du jour
+  renderRoutine(c);
+
   // repas du jour
   const dow = (new Date().getDay()+6)%7; // 0 = lundi
   $("d-repas").innerHTML = mealHTML(dow, c, true);
@@ -1010,6 +1088,123 @@ function renderDash(){
   $("d-seance").innerHTML = seanceHTML(seance, dow, true);
   bindSeanceChecks();
 }
+/* ════════════════════════════════ ROUTINE ════════════════════════════════ */
+const toMin = h => { const [a,b] = String(h).split(":").map(Number); return (a||0)*60 + (b||0); };
+function renderRoutine(c){
+  const r = routineTimes();
+  const j = jourData(todayKey());
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const dow = (now.getDay()+6)%7;
+  const items = [];
+
+  // pesée hebdomadaire du lundi matin
+  if(now.getDay() === 1){
+    items.push({h:r.times.pesee||"07:00", icon:"⚖️", label:"Pesée hebdomadaire (à jeun)",
+      sub:"Chaque lundi matin — enregistre-la dans Suivi", done:S.poids.some(e=>e.d===todayKey()), auto:true});
+  }
+  // repas du plan
+  mealsFor(dow, c).forEach(m=>{
+    items.push({h:r.times[m.id]||ROUTINE_DEFAUT[m.id]||"12:00", icon:m.label.split(" ")[0],
+      label:`${m.label.replace(/^\S+\s/,"")} — ${m.rec.n}`, sub:`${m.kcal} kcal`,
+      done:!!j.mange[m.id], act:["meal", m.id]});
+  });
+  // eau : 3 jalons dans la journée
+  const goal = c.eauL*1000;
+  [["10:00",1/3],["15:00",2/3],["20:00",1]].forEach(([h,f])=>{
+    items.push({h, icon:"💧", label:`Eau : ${fmt1(goal*f/1000)} L bus au total`,
+      sub:"Se coche avec le compteur d'eau", done:j.eau >= goal*f - 1, auto:true});
+  });
+  // entraînement du jour
+  const s = progSessions()[dow];
+  if(s.t !== "repos"){
+    items.push({h:r.times.sport||"17:00", icon:"🏋️", label:`Entraînement — ${s.n}`,
+      sub:s.t==="muscu"?"Musculation":"Cardio", done:!!S.seances[seanceKey(dow)], act:["sport", seanceKey(dow)]});
+  }
+  // éléments personnalisés
+  r.custom.forEach(cs=>{
+    items.push({h:cs.h||"20:00", icon:"📌", label:cs.label, sub:"Personnalisé",
+      done:!!j.rout[cs.label], act:["rout", cs.label]});
+  });
+
+  items.sort((a,b)=>toMin(a.h)-toMin(b.h));
+  $("routineList").innerHTML = items.map((it,i)=>`
+    <div class="rt-item ${it.done?"done":""} ${!it.done && nowMin>toMin(it.h) ? "late":""} ${it.act?"clickable":""}"
+         ${it.act?`data-ract="${it.act[0]}" data-rid="${String(it.act[1]).replace(/"/g,"&quot;")}"`:""}>
+      <span class="rt-time">${it.h}</span>
+      <span class="rt-label">${it.icon} ${it.label}<span class="sub">${it.sub||""}</span></span>
+      <span class="rt-check">${it.done?"✅":(nowMin>toMin(it.h)?"⏰":"◻️")}</span>
+    </div>`).join("");
+  $("routineList").querySelectorAll("[data-ract]").forEach(el=>el.addEventListener("click", ()=>{
+    const t = el.dataset.ract, id = el.dataset.rid;
+    if(t==="meal") j.mange[id] = !j.mange[id];
+    if(t==="sport"){ if(S.seances[id]) delete S.seances[id]; else S.seances[id] = todayKey(); }
+    if(t==="rout") j.rout[id] = !j.rout[id];
+    save(); renderDash();
+  }));
+}
+/* ─── Éditeur de routine ─── */
+$("routineEditBtn").addEventListener("click", ()=>{
+  const ed = $("routineEditor");
+  ed.hidden = !ed.hidden;
+  if(ed.hidden){ ed.innerHTML=""; return; }
+  const c = calc(); if(!c) return;
+  const r = routineTimes();
+  const rows = [];
+  rows.push(["pesee","⚖️ Pesée du lundi", r.times.pesee||"07:00"]);
+  c.struct.meals.forEach(id=> rows.push([id, MEAL_LABELS[id], r.times[id]||ROUTINE_DEFAUT[id]]));
+  rows.push(["sport","🏋️ Entraînement", r.times.sport||"17:00"]);
+  ed.innerHTML = `
+    <p class="muted small">Ajuste les heures de ta routine. Les jalons d'eau se répartissent automatiquement sur la journée.</p>
+    ${rows.map(([k,l,v])=>`
+      <div class="row2" style="margin-top:8px; align-items:center;">
+        <span class="muted" style="font-size:.85rem;">${l}</span>
+        <input type="time" data-rt="${k}" value="${v}">
+      </div>`).join("")}
+    <h3 style="margin-top:14px;">📌 Mes éléments personnalisés</h3>
+    <div id="rtCustomRows">
+      ${r.custom.map((cs,i)=>`
+        <div class="row2" style="margin-top:8px;">
+          <input type="time" data-rch="${i}" value="${cs.h}">
+          <div style="display:flex; gap:6px;">
+            <input type="text" data-rcl="${i}" value="${cs.label.replace(/"/g,"&quot;")}">
+            <button class="del" data-rcd="${i}" type="button">✕</button>
+          </div>
+        </div>`).join("")}
+    </div>
+    <button class="btn secondary" id="rtAddCustom" type="button" style="margin-top:8px;">➕ Ajouter (ex. : étirements, méditation, marche…)</button>
+    <button class="btn" id="rtSave" type="button">💾 Enregistrer ma routine</button>`;
+  $("rtAddCustom").addEventListener("click", ()=>{
+    saveRoutineEditor(false);
+    routineTimes().custom.push({h:"20:00", label:"Nouvel élément"});
+    save();
+    ed.hidden = true; $("routineEditBtn").click();
+  });
+  ed.querySelectorAll("[data-rcd]").forEach(b=>b.addEventListener("click", ()=>{
+    saveRoutineEditor(false);
+    routineTimes().custom.splice(+b.dataset.rcd,1);
+    save();
+    ed.hidden = true; $("routineEditBtn").click();
+  }));
+  $("rtSave").addEventListener("click", ()=>{
+    saveRoutineEditor(true);
+  });
+});
+function saveRoutineEditor(close){
+  const ed = $("routineEditor");
+  const r = routineTimes();
+  ed.querySelectorAll("[data-rt]").forEach(inp=>{ if(inp.value) r.times[inp.dataset.rt] = inp.value; });
+  const customs = [];
+  ed.querySelectorAll("[data-rch]").forEach(inp=>{
+    const i = inp.dataset.rch;
+    const lbl = ed.querySelector(`[data-rcl="${i}"]`);
+    if(lbl && lbl.value.trim()) customs.push({h:inp.value||"20:00", label:lbl.value.trim()});
+  });
+  r.custom = customs;
+  save();
+  if(close){ ed.hidden = true; ed.innerHTML=""; renderDash(); }
+}
+
 /* Extras (ajout rapide) */
 $("extraAdd").addEventListener("click", ()=>{
   const k = +$("extraKcal").value;
@@ -1318,12 +1513,20 @@ function renderSuivi(){
       html = `<div class="alert bad"><b>🔎 ${v.msg}</b>
         ${reasons.length?`<span class="small muted">Raisons notées : ${reasons.join(", ")}.</span>`:""}
         <ul>${corr.join("")}</ul></div>`;
+      // modifications recommandées selon le programme choisi
+      const pk = progKey();
+      const tr = (RECO_TRAIN[pk] || RECO_TRAIN.custom).map(x=>`<li>🏋️ ${x}</li>`);
+      const nu = (c.rate > 0 ? RECO_NUTRI.gainDir : RECO_NUTRI.perteDir).slice(0,2).map(x=>`<li>${x}</li>`);
+      html += `<div class="alert warn"><b>🔧 Modifications recommandées — programme ${(PROG_INFO[pk]||PROG_INFO[p.objectif]).label}</b>
+        <ul>${nu.join("")}${tr.join("")}</ul>
+        <span class="small muted">Applique UNE modification à la fois et redonne-toi 2 semaines avant d'en juger l'effet.</span></div>`;
     }
   } else {
     html = `<div class="alert ok"><b>👋 Première pesée enregistrée</b>Pèse-toi 2-3 fois par semaine, le matin à jeun, pour que l'analyse devienne fiable.</div>`;
   }
   $("analyse").innerHTML = html;
 
+  renderAlertes(c);
   drawChart();
 
   // liste
@@ -1364,6 +1567,51 @@ function renderSuivi(){
 
   drawBars($("barsPas"), "pas", c.g.pas, v=>Math.round(v/1000)+"k");
   drawBars($("barsEau"), "eau", c.eauL*1000, v=>fmt1(v/1000)+" L");
+}
+
+/* ─── Alertes de routine : entraînements sautés, pas, eau, repas, pesée du lundi ─── */
+function renderAlertes(c){
+  const p = S.profil;
+  const out = [];
+  const today = new Date();
+
+  // pesée hebdomadaire (chaque lundi matin)
+  const monday = new Date(today); monday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const mondayK = monday.toISOString().slice(0,10);
+  if(!S.poids.some(e=>e.d >= mondayK)){
+    out.push({lvl: today.getDay()===1 ? "warn" : "bad",
+      txt:`<b>⚖️ Pesée du lundi ${today.getDay()===1?"attendue aujourd'hui":"manquée cette semaine"}</b>Pèse-toi le matin à jeun, après la toilette — même moment chaque semaine pour comparer du pareil au pareil.`});
+  }
+
+  // conformité des 7 derniers jours (hors aujourd'hui, à partir du début du programme)
+  let sk = 0, pasMiss = 0, eauMiss = 0, repasMiss = 0, n = 0;
+  for(let i=1; i<=7; i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    if(p.debut && k < p.debut) continue;
+    n++;
+    const s = progSessions()[(d.getDay()+6)%7];
+    if(s.t !== "repos" && !S.seances[seanceKeyFor(d)]) sk++;
+    const j = S.jours[k];
+    if(!j || j.pas < c.g.pas) pasMiss++;
+    if(!j || j.eau < c.eauL*1000) eauMiss++;
+    const eaten = j && j.mange ? c.struct.meals.filter(m=>j.mange[m]).length : 0;
+    if(eaten < c.struct.meals.length) repasMiss++;
+  }
+  if(n > 0){
+    if(sk > 0) out.push({lvl: sk>=2?"bad":"warn",
+      txt:`<b>🏋️ ${sk} entraînement${sk>1?"s":""} sauté${sk>1?"s":""} sur les 7 derniers jours</b>Reprends dès la prochaine séance prévue à ${routineTimes().times.sport||"17:00"} — sans doubler. Si le temps manque, une version courte de 20 min vaut 100 × mieux que rien.`});
+    if(pasMiss >= 3) out.push({lvl: pasMiss>=5?"bad":"warn",
+      txt:`<b>👟 Objectif de ${c.g.pas.toLocaleString("fr-CA")} pas manqué ${pasMiss} jours sur ${n}</b>Ajoute 2 marches de 15 min (matin et soir) — c'est ~2 500 pas de plus sans y penser.`});
+    if(eauMiss >= 3) out.push({lvl:"warn",
+      txt:`<b>💧 Objectif d'eau (${fmt1(c.eauL)} L) manqué ${eauMiss} jours sur ${n}</b>Remplis ta bouteille dès le matin et suis les 3 jalons de ta routine (10 h, 15 h, 20 h).`});
+    if(repasMiss >= 3) out.push({lvl:"warn",
+      txt:`<b>🍽️ Repas du plan non complétés ${repasMiss} jours sur ${n}</b>Coche chaque repas dans le journal aux heures de ta routine — ce qui n'est pas suivi n'est pas géré.`});
+  }
+
+  $("alertes").innerHTML = out.length
+    ? out.map(a=>`<div class="alert ${a.lvl}">${a.txt}</div>`).join("")
+    : `<div class="alert ok"><b>✅ Routine respectée</b>Aucune alerte : entraînements, pas, eau, repas et pesée sont dans les clous. C'est exactement comme ça qu'on atteint un objectif.</div>`;
 }
 
 /* Jours actifs consécutifs (pesée, pas, eau, repas coché ou séance faite) */

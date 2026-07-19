@@ -1345,6 +1345,107 @@ function renderRepas(){
 /* Contenu : « Le Grand Livre de la Cuisine Méditerranéenne Santé » (sections fournies par l'utilisateur). */
 const LIVRE = [
   {
+    nom:"Section 3 — Déjeuners santé",
+    desc:"Des aliments riches en protéines, en fibres et en bons gras afin de favoriser la satiété et un apport énergétique stable.",
+    kcal:350, prot:22,
+    infos:"Portions : 1 · Préparation : 10 min",
+    recettes:[
+      {n:"Bol de yogourt grec aux fruits rouges", k:320, p:24, v:"320 kcal | P 24 g | G 22 g | L 14 g | Fibres 7 g",
+       i:["200 g de yogourt grec nature","100 g de fruits rouges","1 c. à soupe de graines de chia","15 g d'amandes"],
+       prep:"Déposer le yogourt dans un bol ; ajouter les fruits ; parsemer de chia et d'amandes."},
+      {n:"Gruau méditerranéen", k:350, p:15, v:"350 kcal | P 15 g | G 46 g | L 11 g",
+       i:["60 g de flocons d'avoine","250 ml de lait","1 pomme","Cannelle","10 g de noix"],
+       prep:"Cuire l'avoine ; ajouter la pomme en dés ; garnir de cannelle et de noix."},
+      {n:"Omelette aux épinards et feta", k:340, p:26, v:"340 kcal | P 26 g | G 4 g | L 24 g",
+       i:["3 œufs","1 tasse d'épinards","30 g de feta","1 c. à thé d'huile d'olive"],
+       prep:"Cuire les épinards ; ajouter les œufs battus ; incorporer la feta avant de plier."},
+      {n:"Toast au pain santé et avocat", k:390, p:18, v:"390 kcal | P 18 g | G 28 g | L 22 g",
+       i:["2 tranches de pain santé","½ avocat","1 œuf poché","Poivre"],
+       prep:"Griller le pain ; écraser l'avocat ; ajouter l'œuf poché."},
+      {n:"Smoothie déjeuner protéiné", k:360, p:27, v:"360 kcal | P 27 g | G 38 g | L 10 g",
+       i:["250 ml de lait","150 g de yogourt grec","1 banane","30 g d'avoine","1 c. à soupe de graines de lin"],
+       prep:"Mixer tous les ingrédients jusqu'à texture lisse."}
+    ]
+  },
+  {
+    nom:"Section 4 — Œufs et omelettes",
+    desc:"Les œufs sont une excellente source de protéines de haute qualité. Les recettes suivantes privilégient les légumes, les herbes et l'huile d'olive.",
+    kcal:315, prot:23,
+    infos:"Portions : 1 à 2 · Préparation : 10 min · Cuisson : 10 à 20 min",
+    recettes:[
+      {n:"Omelette méditerranéenne", k:330, p:25, v:"330 kcal | P 25 g | G 6 g | L 22 g | Fibres 2 g",
+       i:["3 œufs","Épinards","Tomates","30 g feta","1 c. à thé huile d'olive"],
+       prep:"Faire revenir les légumes ; ajouter les œufs battus ; incorporer la feta et cuire jusqu'à prise."},
+      {n:"Omelette aux champignons et fines herbes", k:305, p:24, v:"305 kcal | P 24 g | G 5 g | L 20 g",
+       i:["3 œufs","150 g champignons","Persil","Ciboulette","Huile d'olive"],
+       prep:"Cuire les champignons ; verser les œufs ; ajouter les herbes et terminer la cuisson."},
+      {n:"Frittata aux légumes", k:340, p:23, v:"340 kcal | P 23 g | G 9 g | L 23 g",
+       i:["4 œufs","Courgette","Poivron","Oignon","Parmesan râpé"],
+       prep:"Faire revenir les légumes ; ajouter les œufs ; cuire au four 15 min à 180 °C."},
+      {n:"Œufs brouillés au saumon fumé", k:315, p:27, v:"315 kcal | P 27 g | G 2 g | L 22 g",
+       i:["3 œufs","50 g saumon fumé","Aneth","Poivre"],
+       prep:"Cuire doucement les œufs ; ajouter le saumon en fin de cuisson ; servir avec aneth."},
+      {n:"Shakshuka légère", k:290, p:20, v:"290 kcal | P 20 g | G 12 g | L 17 g",
+       i:["3 œufs","Tomates concassées","Poivron","Oignon","Paprika","Cumin"],
+       prep:"Préparer la sauce tomate épicée ; casser les œufs dans la sauce ; cuire jusqu'à ce que les blancs soient pris."},
+      {n:"Omelette aux asperges", k:310, p:24, v:"310 kcal | P 24 g | G 6 g | L 21 g",
+       i:["3 œufs","Asperges","Parmesan","Huile d'olive"],
+       prep:"Cuire les asperges ; ajouter les œufs ; parsemer de parmesan."},
+      {n:"Omelette aux brocolis", k:325, p:26, v:"325 kcal | P 26 g | G 8 g | L 21 g",
+       i:["3 œufs","Brocoli","Cheddar léger"],
+       prep:"Cuire le brocoli ; ajouter les œufs et le fromage ; cuire jusqu'à prise."},
+      {n:"Muffins aux œufs", k:180, p:14, v:"180 kcal par muffin | P 14 g | G 3 g | L 11 g",
+       i:["6 œufs","Épinards","Poivron","Oignon","Feta"],
+       prep:"Répartir les légumes dans un moule à muffins ; verser les œufs battus ; cuire 20 min à 180 °C."}
+    ]
+  },
+  {
+    nom:"Section 5 — Pains santé sans gluten",
+    desc:"Version enrichie avec 15 recettes de pains et produits de boulangerie santé. Le document fournit une base commune pour ces recettes — les ingrédients détaillés pourront être enrichis dans une prochaine version.",
+    kcal:250,
+    valeurs:"≈ 150–350 kcal | Riches en fibres et protéines (par portion)",
+    infos:"Portions : 1 à 2 · Préparation : 5 à 15 min",
+    prep:"Préparer les ingrédients ; mélanger ou cuire selon la recette ; servir immédiatement.",
+    recettes:[
+      {n:"Pain au sarrasin"},{n:"Pain au quinoa"},{n:"Pain aux pois chiches"},{n:"Pain au millet"},
+      {n:"Pain au teff"},{n:"Pain au riz brun"},{n:"Pain aux amandes"},{n:"Pain à la noix de coco"},
+      {n:"Pain aux lentilles"},{n:"Pain multigrains"},{n:"Pain aux graines"},{n:"Pain protéiné"},
+      {n:"Focaccia méditerranéenne"},{n:"Petits pains aux herbes"},{n:"Crackers aux graines"}
+    ]
+  },
+  {
+    nom:"Section 6 — Smoothies et boissons santé",
+    desc:"Version enrichie avec 15 recettes de smoothies riches en nutriments. Le document fournit une base commune pour ces recettes — les ingrédients détaillés pourront être enrichis dans une prochaine version.",
+    kcal:250,
+    valeurs:"≈ 150–350 kcal | Riches en fibres et protéines (par portion)",
+    infos:"Portions : 1 à 2 · Préparation : 5 à 15 min",
+    prep:"Préparer les ingrédients ; mélanger selon la recette ; servir immédiatement.",
+    recettes:[
+      {n:"Smoothie fruits rouges"},{n:"Smoothie vert"},{n:"Smoothie mangue-ananas"},{n:"Smoothie banane-avoine"},
+      {n:"Smoothie cacao protéiné"},{n:"Smoothie pêche-amandes"},{n:"Smoothie concombre-menthe"},{n:"Smoothie tropical"},
+      {n:"Smoothie pomme-cannelle"},{n:"Smoothie bleuets-épinards"},{n:"Smoothie fraise-banane"},{n:"Smoothie orange-carotte"},
+      {n:"Smoothie kiwi-épinards"},{n:"Smoothie poire-gingembre"},{n:"Smoothie ananas-curcuma"}
+    ]
+  },
+  {
+    nom:"Section 7 — Salades méditerranéennes",
+    desc:"Les salades méditerranéennes combinent légumes frais, légumineuses, protéines maigres, céréales complètes et huile d'olive afin d'offrir des repas équilibrés, riches en fibres et en antioxydants.",
+    kcal:335, prot:20,
+    valeurs:"≈ 250–420 kcal | Protéines 10–30 g | Glucides 15–30 g | Lipides 12–22 g | Fibres 5–10 g (par portion)",
+    infos:"Portions : 2 · Préparation : 15 minutes",
+    prep:"Laver et préparer tous les ingrédients ; mélanger légumes et protéines dans un grand saladier ; assaisonner d'une vinaigrette huile d'olive + citron ou balsamique ; servir immédiatement.",
+    recettes:[
+      {n:"Salade grecque", i:["Tomates","Concombre","Poivron","Oignon rouge","Olives","Feta","Huile d'olive","Origan"]},
+      {n:"Salade de quinoa", i:["Quinoa cuit","Concombre","Tomates cerises","Persil","Menthe","Citron","Huile d'olive"]},
+      {n:"Salade de lentilles", i:["Lentilles cuites","Carottes","Céleri","Persil","Échalote","Vinaigre balsamique"]},
+      {n:"Salade de pois chiches", i:["Pois chiches","Concombre","Tomates","Poivron","Persil","Citron"]},
+      {n:"Salade de saumon", i:["Saumon grillé","Roquette","Avocat","Concombre","Citron"]},
+      {n:"Salade de poulet", i:["Poulet grillé","Laitue","Tomates","Concombre","Olives"]},
+      {n:"Taboulé santé", i:["Boulgour complet","Persil","Menthe","Tomates","Citron"]},
+      {n:"Salade d'épinards", i:["Épinards","Fraises","Noix","Fromage de chèvre","Vinaigre balsamique"]}
+    ]
+  },
+  {
     nom:"Section 15 — Collations santé",
     desc:"Les collations méditerranéennes permettent de maintenir un bon niveau d'énergie entre les repas. Elles privilégient les aliments peu transformés, riches en protéines, fibres et bons gras.",
     kcal:225, prot:13,
@@ -1435,17 +1536,19 @@ function renderLivre(){
       <div class="wbody">
         <p class="muted small" style="margin-bottom:10px;">${esc(sec.desc)}</p>
         ${sec.infos ? `<p class="muted small" style="margin-bottom:10px;"><b>${esc(sec.infos)}</b></p>` : ""}
-        ${sec.recettes ? sec.recettes.map((r,ri)=>`
+        ${sec.recettes ? sec.recettes.map((r,ri)=>{
+          const k = r.k || sec.kcal, p = r.p ?? sec.prot;
+          return `
           <div class="meal">
             <div class="mhead">
               <div><h4>${esc(r.n)}</h4></div>
-              <div class="kcal">≈ ${sec.kcal} kcal · ${sec.prot} g prot.</div>
+              <div class="kcal">${r.k?"":"≈ "}${k} kcal${p?` · ${p} g prot.`:""}</div>
             </div>
-            <ul>${r.i.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
-            <div class="prep">${esc(sec.prep)}</div>
-            <div class="muted small" style="margin-top:6px;">${esc(sec.valeurs)}</div>
-            <button type="button" class="eat-btn" data-livrej="${si}:${ri}">➕ Au journal du jour (≈ ${sec.kcal} kcal)</button>
-          </div>`).join("") : ""}
+            ${r.i ? `<ul>${r.i.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+            ${(r.prep||sec.prep) ? `<div class="prep">${esc(r.prep||sec.prep)}</div>` : ""}
+            ${(r.v||sec.valeurs) ? `<div class="muted small" style="margin-top:6px;">${esc(r.v||sec.valeurs)}</div>` : ""}
+            <button type="button" class="eat-btn" data-livrej="${si}:${ri}">➕ Au journal du jour (${r.k?"":"≈ "}${k} kcal)</button>
+          </div>`;}).join("") : ""}
         ${sec.blocs ? sec.blocs.map(b=>`
           <h3>${esc(b.t)}</h3>
           <ul class="muted" style="margin:0 0 8px 18px; font-size:.85rem; line-height:1.65;">
@@ -1460,12 +1563,13 @@ function renderLivre(){
   }));
   $("livreList").querySelectorAll("[data-livrej]").forEach(b=>b.addEventListener("click", ()=>{
     const [si,ri] = b.dataset.livrej.split(":").map(Number);
-    const sec = LIVRE[si];
-    jourData(todayKey()).extra.push({n:sec.recettes[ri].n, k:sec.kcal});
+    const sec = LIVRE[si], r = sec.recettes[ri];
+    const k = r.k || sec.kcal;
+    jourData(todayKey()).extra.push({n:r.n, k});
     save();
     b.textContent = "✔ Ajouté au journal";
     b.classList.add("eaten");
-    setTimeout(()=>{ b.textContent = `➕ Au journal du jour (≈ ${sec.kcal} kcal)`; b.classList.remove("eaten"); }, 1800);
+    setTimeout(()=>{ b.textContent = `➕ Au journal du jour (${r.k?"":"≈ "}${k} kcal)`; b.classList.remove("eaten"); }, 1800);
   }));
 }
 

@@ -246,6 +246,24 @@
         </select>
         <label>Poids désiré (kg)</label>
         <input type="number" id="f-cible" min="35" max="300" step="0.1" required>
+        <label>Repas par jour</label>
+        <select id="f-repas">
+          <option value="auto" selected>🤖 Recommandé par l'app (selon mon but)</option>
+          <option value="2">2 repas — petit déjeuner + souper</option>
+          <option value="3">3 repas — petit déjeuner + déjeuner + souper</option>
+          <option value="4">4 repas — + collation</option>
+          <option value="3c">3 repas — petit déjeuner + collation + souper</option>
+          <option value="if">2 repas — déjeuner + souper (jeûne 16/8)</option>
+        </select>
+        <label>Période pour atteindre mon poids</label>
+        <select id="f-periode">
+          <option value="auto" selected>🤖 Au rythme recommandé (selon mon but)</option>
+          <option value="13">3 mois</option>
+          <option value="26">6 mois</option>
+          <option value="52">1 an</option>
+          <option value="perso">⚙️ Personnalisée (en semaines)</option>
+        </select>
+        <input type="number" id="f-periode-sem" min="4" max="156" placeholder="Nombre de semaines (ex. : 20)" hidden style="margin-top:8px;">
         <label>Programme d'entraînement</label>
         <select id="f-programme">
           <option value="auto" selected>🤖 Automatique (adapté à mon objectif)</option>
@@ -291,6 +309,11 @@
       </div>
       <div class="macro-bar" id="macroBar"></div>
       <div class="legend" id="macroLegend"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Mon plan complet</h2>
+      <div id="d-plan"></div>
     </div>
 
     <div class="card">
@@ -359,8 +382,8 @@
   <!-- ═══════════ REPAS ═══════════ -->
   <section class="view" id="view-repas">
     <div class="card">
-      <h2>🍽️ Programme repas — 2 repas / jour</h2>
-      <p class="muted">Petit déjeuner (~40 % des calories) + dîner (~60 %). Les portions sont ajustées à ton objectif de <b id="r-cal"></b> kcal/jour, riche en protéines pour préserver / construire le muscle.</p>
+      <h2>🍽️ Programme repas de la semaine</h2>
+      <p class="muted" id="r-desc"></p>
       <div class="day-tabs" id="repasDayTabs"></div>
       <div id="repasList"></div>
     </div>
@@ -474,6 +497,21 @@ const GOALS = {
 /* Répartition macros par objectif : [prot, gluc, lip] en % des calories */
 const MACROS = { shred:[0.40,0.35,0.25], perte:[0.35,0.40,0.25], muscu:[0.30,0.45,0.25], masse:[0.28,0.50,0.22] };
 
+/* ─── Structures de repas : combinaisons possibles dans la journée.
+   dej = petit déjeuner, lun = déjeuner (midi), col = collation, din = souper ─── */
+const MEAL_STRUCTS = {
+  "2":  {label:"2 repas — petit déjeuner + souper",                    meals:["dej","din"]},
+  "3":  {label:"3 repas — petit déjeuner + déjeuner + souper",         meals:["dej","lun","din"]},
+  "4":  {label:"4 repas — déjeuners + collation + souper",             meals:["dej","lun","col","din"]},
+  "if": {label:"2 repas — déjeuner + souper (jeûne 16/8)",             meals:["lun","din"]},
+  "3c": {label:"3 repas — petit déjeuner + collation + souper",        meals:["dej","col","din"]}
+};
+/* Poids relatif de chaque repas (normalisé sur les repas choisis) */
+const MEAL_W = { dej:30, lun:35, col:12, din:38 };
+const MEAL_LABELS = { dej:"☀️ Petit déjeuner", lun:"🥗 Déjeuner", col:"🍎 Collation", din:"🌙 Souper" };
+/* Structure recommandée par l'app selon l'objectif */
+const MEALS_AUTO = { shred:"3", perte:"2", muscu:"4", masse:"4" };
+
 /* ─── Recettes : 7 petits déjeuners + 7 dîners par famille d'objectif.
    kcal/prot = valeurs de base pour 1 portion; l'app affiche un facteur de portion. ─── */
 const RECETTES = {
@@ -495,6 +533,24 @@ const RECETTES = {
       {n:"Sauté de bœuf & légumes asiatique", k:570, p:40, i:["150 g bœuf en lanières","légumes sautés (poivrons, oignon, pak choï)","sauce soya réduite en sodium","100 g riz"], prep:"Saisir le bœuf, ajouter légumes et sauce, servir sur riz."},
       {n:"Crevettes à l'ail, courgettes & pâtes complètes", k:530, p:36, i:["180 g crevettes","1 courgette","80 g pâtes complètes","ail, huile d'olive"], prep:"Sauter crevettes et courgette à l'ail, mélanger aux pâtes cuites."},
       {n:"Tofu croustillant, légumes rôtis & couscous", k:510, p:30, i:["200 g tofu ferme","légumes rôtis","100 g couscous complet","sauce tamari"], prep:"Rôtir tofu et légumes au four 25 min, servir sur couscous."}
+    ],
+    lun: [
+      {n:"Salade César au poulet (légère)", k:480, p:40, i:["150 g poulet grillé","laitue romaine","vinaigrette César légère","croûtons, parmesan"], prep:"Assembler la salade, poulet tranché sur le dessus."},
+      {n:"Wrap thon-yogourt & crudités", k:450, p:35, i:["1 boîte de thon","2 c. à soupe yogourt grec","1 tortilla complète","laitue, tomates"], prep:"Mélanger thon et yogourt, garnir la tortilla et rouler."},
+      {n:"Bol quinoa, pois chiches & feta", k:470, p:25, i:["120 g quinoa cuit","150 g pois chiches","30 g feta","concombre, tomates, citron"], prep:"Tout assembler, arroser de citron et d'un filet d'huile."},
+      {n:"Soupe-repas aux lentilles + pain", k:460, p:26, i:["300 ml soupe aux lentilles","1 tranche pain complet","1 filet d'huile d'olive"], prep:"Réchauffer la soupe, servir avec le pain grillé."},
+      {n:"Salade œufs, avocat & épinards", k:450, p:24, i:["3 œufs durs","½ avocat","épinards","vinaigrette moutarde"], prep:"Assembler la salade avec les œufs tranchés."},
+      {n:"Sandwich dinde-crudités", k:440, p:32, i:["100 g dinde tranchée","2 tranches pain complet","moutarde, laitue, tomate","1 fruit"], prep:"Monter le sandwich, accompagner du fruit."},
+      {n:"Restes du souper d'hier (portion réduite)", k:480, p:35, i:["¾ de la portion du souper précédent"], prep:"Réchauffer — le meal prep le plus simple qui existe."}
+    ],
+    col: [
+      {n:"Yogourt grec & petits fruits", k:160, p:18, i:["150 g yogourt grec 0-2 %","80 g petits fruits"], prep:"Mélanger."},
+      {n:"Pomme & amandes", k:170, p:5, i:["1 pomme","15 g amandes"], prep:"Croquer."},
+      {n:"Shake protéiné à l'eau", k:130, p:25, i:["1 scoop protéine","250 ml d'eau"], prep:"Secouer 10 secondes."},
+      {n:"2 œufs durs", k:140, p:12, i:["2 œufs","sel, poivre"], prep:"Cuire 9 min à l'avance, garder au frigo."},
+      {n:"Cottage & concombre", k:120, p:14, i:["100 g fromage cottage","½ concombre"], prep:"Tremper le concombre dans le cottage."},
+      {n:"Houmous & crudités", k:150, p:6, i:["3 c. à soupe houmous","carottes, céleri, poivron"], prep:"Tremper."},
+      {n:"Barre protéinée", k:180, p:15, i:["1 barre protéinée (choisir < 200 kcal)"], prep:"Prête à emporter."}
     ]
   },
   muscu: {
@@ -515,6 +571,24 @@ const RECETTES = {
       {n:"Steak, pommes de terre rôties & haricots verts", k:700, p:48, i:["180 g steak","250 g pommes de terre","150 g haricots verts","beurre à l'ail léger"], prep:"Rôtir les pommes de terre, griller le steak, cuire les haricots vapeur."},
       {n:"Curry de pois chiches & poulet", k:650, p:42, i:["150 g poulet","150 g pois chiches","lait de coco léger","riz basmati, épices curry"], prep:"Mijoter poulet, pois chiches et lait de coco aux épices; servir sur riz."},
       {n:"Poke bowl thon ou tofu", k:640, p:40, i:["150 g thon frais ou tofu","riz à sushi","edamames, mangue, concombre","sauce soya-sésame"], prep:"Assembler le bol, arroser de sauce."}
+    ],
+    lun: [
+      {n:"Bol poulet-riz-brocoli express", k:620, p:45, i:["150 g poulet","150 g riz cuit","brocoli vapeur","sauce au choix"], prep:"Le classique meal prep — réchauffer et manger."},
+      {n:"Wrap double poulet-fromage", k:600, p:42, i:["150 g poulet","1 grande tortilla","30 g fromage râpé","laitue, salsa"], prep:"Garnir, rouler, griller 2 min à la poêle."},
+      {n:"Pâtes au thon & tomates", k:580, p:38, i:["90 g pâtes complètes","1 boîte de thon","sauce tomate","parmesan"], prep:"Mélanger les pâtes cuites, le thon et la sauce chaude."},
+      {n:"Bol burrito au bœuf", k:640, p:40, i:["120 g bœuf haché maigre","riz, haricots noirs","maïs, salsa","fromage"], prep:"Assembler le bol."},
+      {n:"Sandwich poulet-avocat + verre de lait", k:610, p:42, i:["120 g poulet","½ avocat","2 tranches pain complet","250 ml lait"], prep:"Monter le sandwich, boire le lait."},
+      {n:"Saumon & riz express", k:620, p:40, i:["1 conserve de saumon","150 g riz","edamames ou légumes verts","sauce soya"], prep:"Assembler en bol, réchauffer 2 min."},
+      {n:"Restes du souper d'hier", k:620, p:42, i:["1 portion complète du souper précédent"], prep:"Réchauffer."}
+    ],
+    col: [
+      {n:"Shake protéiné au lait", k:250, p:30, i:["1 scoop protéine","300 ml lait"], prep:"Secouer."},
+      {n:"Yogourt grec & granola", k:240, p:20, i:["200 g yogourt grec","25 g granola"], prep:"Mélanger."},
+      {n:"Toast beurre d'arachide & banane", k:280, p:10, i:["1 tranche pain complet","1 c. à soupe beurre d'arachide","½ banane"], prep:"Tartiner, trancher la banane dessus."},
+      {n:"Fromage, craquelins & raisins", k:250, p:12, i:["30 g fromage","4-5 craquelins","poignée de raisins"], prep:"Assembler l'assiette."},
+      {n:"2 œufs durs & 1 fruit", k:220, p:13, i:["2 œufs durs","1 fruit"], prep:"Prêt en 30 secondes si les œufs sont cuits d'avance."},
+      {n:"Smoothie fruits & protéine", k:260, p:25, i:["1 scoop protéine","150 g fruits surgelés","250 ml lait ou eau"], prep:"Mélangeur 30 s."},
+      {n:"Mélange du randonneur", k:230, p:7, i:["40 g noix + fruits séchés"], prep:"À garder dans le sac de sport."}
     ]
   },
   masse: {
@@ -535,6 +609,24 @@ const RECETTES = {
       {n:"Curry poulet-coco & riz XL", k:840, p:50, i:["200 g poulet","lait de coco","180 g riz","légumes, épices"], prep:"Mijoter le curry 20 min, servir sur riz."},
       {n:"Bœuf sauté, nouilles & arachides", k:860, p:48, i:["180 g bœuf","nouilles asiatiques","légumes sautés","sauce arachide"], prep:"Sauter le tout au wok."},
       {n:"Lasagne maison & salade", k:820, p:45, i:["portion de lasagne bœuf-ricotta","salade verte","vinaigrette","pain"], prep:"Réchauffer / cuire la lasagne, servir avec salade."}
+    ],
+    lun: [
+      {n:"Bol poulet-riz XL & avocat", k:780, p:50, i:["180 g poulet","180 g riz cuit","1 avocat","légumes, sauce"], prep:"Assembler le bol généreux."},
+      {n:"Pâtes bolognaises (restes)", k:750, p:45, i:["1 grosse portion de bolognaise","parmesan","pain"], prep:"Réchauffer."},
+      {n:"2 wraps poulet-fromage", k:760, p:48, i:["160 g poulet","2 tortillas","fromage râpé","laitue, salsa"], prep:"Garnir et rouler les 2 wraps."},
+      {n:"Bol saumon-riz-edamames", k:740, p:45, i:["180 g saumon (conserve ou restes)","riz","edamames","sauce soya-sésame"], prep:"Assembler."},
+      {n:"Burger maison & patates", k:780, p:42, i:["1 boulette 150 g","pain burger, fromage","patates au four"], prep:"Griller la boulette, monter le burger."},
+      {n:"Riz sauté œufs-poulet", k:750, p:44, i:["150 g poulet","2 œufs","riz de la veille","légumes, sauce soya"], prep:"Tout sauter au wok 8 min."},
+      {n:"Sous-marin poulet 12 po + lait", k:770, p:48, i:["sous-marin poulet grillé","300 ml lait"], prep:"L'option resto raisonnable."}
+    ],
+    col: [
+      {n:"Shake gainer maison", k:400, p:32, i:["1 scoop protéine","300 ml lait entier","1 banane","1 c. à soupe beurre d'arachide"], prep:"Mélangeur 30 s."},
+      {n:"Yogourt grec, granola & miel", k:350, p:22, i:["250 g yogourt grec","30 g granola","1 c. à soupe miel"], prep:"Assembler."},
+      {n:"Sandwich beurre d'arachide-confiture + lait", k:380, p:15, i:["2 tranches pain","beurre d'arachide, confiture","250 ml lait"], prep:"Le classique qui fait le travail."},
+      {n:"Noix & fruits séchés", k:350, p:10, i:["50 g mélange noix + fruits séchés"], prep:"Dans le sac, toujours."},
+      {n:"Fromage, craquelins & dinde", k:340, p:20, i:["40 g fromage","craquelins","60 g dinde tranchée"], prep:"Assembler l'assiette."},
+      {n:"Smoothie lait-avoine-fruits", k:360, p:20, i:["250 ml lait","30 g avoine","150 g fruits","½ scoop protéine"], prep:"Mélangeur."},
+      {n:"2 toasts avocat-œuf", k:350, p:16, i:["2 tranches pain","½ avocat","1 œuf"], prep:"Tartiner, œuf au plat dessus."}
     ]
   }
 };
@@ -708,17 +800,41 @@ function calc(){
   // Mifflin-St Jeor
   const bmr = 10*poids + 6.25*p.taille - 5*p.age + (p.sexe==="h" ? 5 : -161);
   const tdee = Math.round(bmr * p.activite);
-  let cal = Math.round(tdee * (1 + g.pct));
-  // planchers de sécurité
-  cal = Math.max(cal, p.sexe==="h" ? 1500 : 1200);
+  const diff = poids - p.cible;
+
+  // Rythme (kg/semaine) : imposé par la période choisie, sinon celui de l'objectif
+  let rate = g.rate, clamped = false, periodeSem = null;
+  const per = p.periode && p.periode !== "auto" ? +p.periode : null;
+  if(per && Math.abs(diff) > 0.2){
+    let r = -diff / per; // négatif = perte
+    if(r < 0){ const rc = Math.min(-0.1, Math.max(r, -1.0)); clamped = rc !== r; r = rc; } // perte max 1 kg/sem
+    else     { const rc = Math.max(0.1, Math.min(r, 0.4));  clamped = rc !== r; r = rc; } // gain max 0,4 kg/sem
+    rate = r;
+    periodeSem = per;
+  }
+
+  // Calories : dérivées du rythme si période choisie (7 700 kcal ≈ 1 kg), sinon % de l'objectif
+  let cal = periodeSem ? Math.round(tdee + rate*7700/7) : Math.round(tdee * (1 + g.pct));
+  cal = Math.max(cal, p.sexe==="h" ? 1500 : 1200); // planchers de sécurité
+
   const [pp,pg,pl] = MACROS[p.objectif];
   const prot = Math.round(cal*pp/4), gluc = Math.round(cal*pg/4), lip = Math.round(cal*pl/9);
   const eauL = Math.round(poids*35/100)/10; // 35 ml/kg
-  const diff = poids - p.cible;
+
   let etaSem = null;
-  if(g.rate < 0 && diff > 0) etaSem = Math.ceil(diff / -g.rate);
-  if(g.rate > 0 && diff < 0) etaSem = Math.ceil(-diff / g.rate);
-  return {g, poids, tdee, cal, prot, gluc, lip, eauL, diff, etaSem};
+  if(rate < 0 && diff > 0) etaSem = Math.ceil(diff / -rate);
+  if(rate > 0 && diff < 0) etaSem = Math.ceil(-diff / rate);
+
+  // Structure de repas : choix explicite ou recommandation selon l'objectif
+  const structKey = (p.repas && p.repas !== "auto") ? p.repas : MEALS_AUTO[p.objectif];
+  const struct = MEAL_STRUCTS[structKey] || MEAL_STRUCTS["2"];
+  const wTotal = struct.meals.reduce((s,m)=>s+MEAL_W[m], 0);
+  const split = {};
+  struct.meals.forEach(m => split[m] = MEAL_W[m]/wTotal);
+
+  return {g, poids, tdee, cal, prot, gluc, lip, eauL, diff, etaSem,
+          rate, clamped, periodeSem, structKey, struct, split,
+          repasAuto: !(p.repas && p.repas !== "auto")};
 }
 
 /* ════════════════════════════════ NAVIGATION ════════════════════════════════ */
@@ -748,6 +864,8 @@ $("profilForm").addEventListener("submit", e=>{
     activite: +$("f-activite").value,
     objectif: $("f-objectif").value,
     cible: +$("f-cible").value,
+    repas: $("f-repas").value,
+    periode: $("f-periode").value === "perso" ? (+$("f-periode-sem").value || "auto") : $("f-periode").value,
     programme: $("f-programme").value,
     debut: S.profil && S.profil.debut ? S.profil.debut : todayKey()
   };
@@ -795,9 +913,16 @@ function fillProfilForm(){
   $("f-sexe").value=p.sexe; $("f-age").value=p.age; $("f-poids").value=p.poids;
   $("f-taille").value=p.taille; $("f-activite").value=p.activite;
   $("f-objectif").value=p.objectif; $("f-cible").value=p.cible;
+  $("f-repas").value = p.repas || "auto";
+  const per = p.periode || "auto";
+  if(per === "auto" || ["13","26","52"].includes(String(per))){ $("f-periode").value = String(per); }
+  else { $("f-periode").value = "perso"; $("f-periode-sem").value = per; $("f-periode-sem").hidden = false; }
   $("f-programme").value = p.programme || "auto";
   $("dangerZone").hidden = false;
 }
+$("f-periode").addEventListener("change", ()=>{
+  $("f-periode-sem").hidden = $("f-periode").value !== "perso";
+});
 /* Programme d'entraînement actif : choix explicite, sinon celui de l'objectif nutritionnel */
 function progKey(){
   const p = S.profil;
@@ -840,13 +965,28 @@ function renderDash(){
   $("d-prog-txt").innerHTML = `Poids actuel : <b style="color:var(--txt)">${fmt1(c.poids)} kg</b> — il reste <b style="color:var(--accent)">${fmt1(reste)} kg</b> (${pct.toFixed(0)} % du chemin fait).`;
   if(c.etaSem){
     const eta = new Date(); eta.setDate(eta.getDate() + c.etaSem*7);
-    $("d-eta").textContent = `Au rythme prévu (${Math.abs(c.g.rate)} kg/sem.), objectif atteint vers le ${eta.toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"})} (~${c.etaSem} semaines).`;
-  } else if(c.g.rate === 0){
+    $("d-eta").textContent = `Au rythme du plan (${fmt1(Math.abs(c.rate))} kg/sem.), objectif atteint vers le ${eta.toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"})} (~${c.etaSem} semaines).`;
+  } else if(c.rate === 0){
     $("d-eta").textContent = "Mode recomposition : ton poids reste stable pendant que le muscle remplace le gras. Suis plutôt tes performances et tes mensurations.";
   } else {
     $("d-eta").textContent = Math.abs(c.diff) < 0.5 ? "🎉 Objectif atteint ! Passe en mode maintien ou fixe un nouveau but." :
       "Ton objectif de poids va dans le sens opposé de ton mode actuel — ajuste l'objectif dans Profil.";
   }
+
+  // plan complet
+  const progK = progKey();
+  const perTxt = c.periodeSem
+    ? ({13:"3 mois",26:"6 mois",52:"1 an"}[c.periodeSem] || c.periodeSem+" semaines")
+    : "au rythme recommandé";
+  const delta2 = c.cal - c.tdee;
+  $("d-plan").innerHTML = `
+    <div class="entry"><span class="muted">🎯 Objectif</span><b>${c.g.label} → ${fmt1(p.cible)} kg</b></div>
+    <div class="entry"><span class="muted">⏱️ Période</span><b>${perTxt}${c.clamped ? " ⚠️" : ""}</b></div>
+    <div class="entry"><span class="muted">📉 Rythme visé</span><b>${c.rate>0?"+":""}${fmt1(c.rate)} kg/sem. (${delta2>0?"+":""}${delta2} kcal/j)</b></div>
+    <div class="entry"><span class="muted">🍽️ Alimentation</span><b>${c.struct.label}${c.repasAuto ? " 🤖" : ""}</b></div>
+    <div class="entry"><span class="muted">🏋️ Entraînement</span><b>${(PROG_INFO[progK]||PROG_INFO[p.objectif]).label}${(!p.programme || p.programme==="auto") ? " 🤖" : ""}</b></div>
+    ${c.clamped ? `<p class="muted small" style="margin-top:8px;">⚠️ La période demandée exigeait un rythme trop agressif : je l'ai plafonné à un niveau sain (max 1 kg/sem. en perte, 0,4 kg/sem. en prise). L'échéance réelle est celle affichée plus haut.</p>` : ""}
+    ${(c.repasAuto || !p.programme || p.programme==="auto") ? `<p class="muted small" style="margin-top:8px;">🤖 = recommandation de l'app selon ton but — modifiable dans Profil ou dans l'onglet Sport.</p>` : ""}`;
 
   // eau / pas
   const j = jourData(todayKey());
@@ -880,36 +1020,38 @@ $("extraAdd").addEventListener("click", ()=>{
 });
 
 /* ════════════════════════════════ REPAS ════════════════════════════════ */
+/* Repas du jour selon la structure choisie : liste de {id, label, rec, kcal, prot, f} */
 function mealsFor(dow, c){
   const set = RECETTES[c.g.mealSet];
-  const dej = set.dej[dow % 7], din = set.din[dow % 7];
-  const kDej = Math.round(c.cal*0.40), kDin = Math.round(c.cal*0.60);
-  return {dej, din, kDej, kDin, fDej:kDej/dej.k, fDin:kDin/din.k};
+  return c.struct.meals.map(id => {
+    const rec = set[id][dow % 7];
+    const kcal = Math.round(c.cal * c.split[id]);
+    const f = kcal / rec.k;
+    return {id, label: MEAL_LABELS[id], rec, kcal, prot: Math.round(rec.p*f), f};
+  });
 }
 function mealHTML(dow, c, isToday){
-  const m = mealsFor(dow, c);
   const j = isToday ? jourData(todayKey()) : null;
-  const one = (rec, id, type, kcal, f) => `
+  return mealsFor(dow, c).map(m => `
     <div class="meal">
       <div class="mhead">
-        <div><div class="mtype">${type}</div><h4>${rec.n}</h4></div>
-        <div class="kcal">${kcal} kcal · ${Math.round(rec.p*f)} g prot.</div>
+        <div><div class="mtype">${m.label}</div><h4>${m.rec.n}</h4></div>
+        <div class="kcal">${m.kcal} kcal · ${m.prot} g prot.</div>
       </div>
-      <ul>${rec.i.map(x=>`<li>${x}</li>`).join("")}</ul>
-      <div class="prep">${rec.prep}</div>
-      <div class="muted small" style="margin-top:6px;">Portion : ×${f.toFixed(1)} de la recette de base (${rec.k} kcal).</div>
-      ${isToday ? `<button type="button" class="eat-btn ${j.mange[id]?"eaten":""}" data-meal="${id}">${j.mange[id]?"✔ Mangé":"Marquer comme mangé"}</button>` : ""}
-    </div>`;
-  return one(m.dej,"dej","☀️ Petit déjeuner",m.kDej,m.fDej) + one(m.din,"din","🌙 Souper / dîner",m.kDin,m.fDin);
+      <ul>${m.rec.i.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <div class="prep">${m.rec.prep}</div>
+      <div class="muted small" style="margin-top:6px;">Portion : ×${m.f.toFixed(1)} de la recette de base (${m.rec.k} kcal).</div>
+      ${isToday ? `<button type="button" class="eat-btn ${j.mange[m.id]?"eaten":""}" data-meal="${m.id}">${j.mange[m.id]?"✔ Mangé":"Marquer comme mangé"}</button>` : ""}
+    </div>`).join("");
 }
 /* Calories consommées aujourd'hui (repas cochés + extras) */
 function consomme(c){
   const j = jourData(todayKey());
   const dow = (new Date().getDay()+6)%7;
-  const m = mealsFor(dow, c);
   let kcal = 0, prot = 0;
-  if(j.mange.dej){ kcal += m.kDej; prot += Math.round(m.dej.p*m.fDej); }
-  if(j.mange.din){ kcal += m.kDin; prot += Math.round(m.din.p*m.fDin); }
+  mealsFor(dow, c).forEach(m => {
+    if(j.mange[m.id]){ kcal += m.kcal; prot += m.prot; }
+  });
   j.extra.forEach(e => kcal += e.k);
   return {kcal, prot};
 }
@@ -939,7 +1081,8 @@ function renderJournal(c){
 let repasDay = (new Date().getDay()+6)%7;
 function renderRepas(){
   const c = calc(); if(!c) return;
-  $("r-cal").textContent = c.cal.toLocaleString("fr-CA");
+  const parts = c.struct.meals.map(id => `${MEAL_LABELS[id].replace(/^\S+\s/,"")} (~${Math.round(c.split[id]*100)} %)`).join(" + ");
+  $("r-desc").innerHTML = `${c.struct.label}${c.repasAuto ? " — 🤖 recommandé selon ton but" : ""}.<br>${parts} de ton objectif de <b>${c.cal.toLocaleString("fr-CA")}</b> kcal/jour, riche en protéines pour préserver / construire le muscle.`;
   $("r-prot").textContent = c.prot;
   $("repasDayTabs").innerHTML = JOURS_LMD.map((j,i)=>
     `<button class="${i===repasDay?"active":""}" data-d="${i}">${j.slice(0,3)}</button>`).join("");
@@ -1093,7 +1236,6 @@ function commitWeigh(raisons, note){
 /* Analyse : compare le rythme réel des ~14 derniers jours au rythme attendu. */
 function analyseTendance(newKg){
   const p = S.profil; if(!p) return null;
-  const g = GOALS[p.objectif];
   const all = [...S.poids.filter(e=>e.d!==todayKey()), {d:todayKey(), kg:newKg}];
   if(all.length < 2) return {level:"ok"};
   const last = all[all.length-1];
@@ -1103,7 +1245,7 @@ function analyseTendance(newKg){
   const ref = window14.length >= 2 ? window14[0] : all[all.length-2];
   const days = Math.max(1, (new Date(last.d) - new Date(ref.d)) / 86400000);
   const rate = (last.kg - ref.kg) / days * 7; // kg / semaine réel
-  const target = g.rate;
+  const target = calc().rate; // rythme du plan (période choisie ou objectif)
 
   if(target < 0){ // perte
     if(rate > -0.15) return {level:"warn", rate, target,
@@ -1164,7 +1306,7 @@ function renderSuivi(){
       html = `<div class="alert ok"><b>✅ Sur la bonne voie</b>Rythme actuel : ${v.rate!==undefined?(v.rate>0?"+":"")+fmt1(v.rate)+" kg/sem.":"—"} — continue exactement comme ça.</div>`;
     } else if(v.level==="fast"){
       html = `<div class="alert warn"><b>⚡ ${v.msg}</b><ul>
-        <li>${c.g.rate<0 ? "Ajoute 150-200 kcal/jour (ex. : 1 collation protéinée) pour protéger ton muscle et ton énergie." : "Réduis d'environ 150 kcal/jour pour limiter la prise de gras."}</li>
+        <li>${c.rate<0 ? "Ajoute 150-200 kcal/jour (ex. : 1 collation protéinée) pour protéger ton muscle et ton énergie." : "Réduis d'environ 150 kcal/jour pour limiter la prise de gras."}</li>
         <li>Garde tes séances de musculation — c'est ce qui dirige le poids au bon endroit.</li></ul></div>`;
     } else {
       const last = S.poids[S.poids.length-1];
@@ -1274,7 +1416,7 @@ function drawChart(){
   const svg = $("chart");
   const p = S.profil;
   if(!p || S.poids.length===0){ svg.innerHTML=""; return; }
-  const g = GOALS[p.objectif];
+  const rate = calc().rate; // rythme du plan
   const W=640, H=260, mL=44, mR=14, mT=14, mB=28;
 
   const first = S.poids[0];
@@ -1283,8 +1425,8 @@ function drawChart(){
   // trajectoire prévue jusqu'à la cible (ou +8 semaines si maintien)
   const diff = first.kg - p.cible;
   let endDate;
-  if(g.rate!==0 && ((g.rate<0&&diff>0)||(g.rate>0&&diff<0))){
-    endDate = new Date(start.getTime() + Math.abs(diff/g.rate)*7*86400000);
+  if(rate!==0 && ((rate<0&&diff>0)||(rate>0&&diff<0))){
+    endDate = new Date(start.getTime() + Math.abs(diff/rate)*7*86400000);
   } else {
     endDate = new Date(Math.max(lastD.getTime(), start.getTime()) + 56*86400000);
   }
@@ -1310,7 +1452,7 @@ function drawChart(){
   out += `<line x1="${mL}" y1="${yc}" x2="${W-mR}" y2="${yc}" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="2 4"/>`;
   out += `<text x="${W-mR}" y="${yc-5}" fill="#fbbf24" font-size="11" text-anchor="end">Objectif ${fmt1(p.cible)} kg</text>`;
   // trajectoire prévue
-  const projEndKg = g.rate!==0 ? p.cible : first.kg;
+  const projEndKg = rate!==0 ? p.cible : first.kg;
   out += `<line x1="${X(first.d)}" y1="${Y(first.kg)}" x2="${X(endDate)}" y2="${Y(projEndKg)}" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>`;
   // courbe réelle
   if(S.poids.length>1){

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitCoach">
+<link rel="manifest" href="fitness.webmanifest">
+<link rel="icon" href="fitness-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="fitness-icon.svg">
 <title>FitCoach — Perte de poids & Musculation</title>
 <style>
   :root{
@@ -166,6 +173,18 @@
   }
   .chip.sel{background:rgba(251,191,36,.15); border-color:var(--warn); color:var(--warn); font-weight:600;}
   .backlink{display:inline-block; margin:14px 20px 0; color:var(--muted); font-size:.8rem; text-decoration:none;}
+  /* journal calories */
+  .eat-btn{
+    border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:999px;
+    padding:7px 14px; font-size:.78rem; cursor:pointer; margin-top:10px; font-family:inherit;
+  }
+  .eat-btn.eaten{background:rgba(52,211,153,.15); border-color:var(--accent); color:var(--accent); font-weight:700;}
+  .quick-add{display:grid; grid-template-columns:1fr 90px auto; gap:8px; margin-top:10px;}
+  .extra-item{display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--muted); padding:6px 0; border-bottom:1px solid var(--line);}
+  .extra-item:last-child{border-bottom:none;}
+  .kcal-left{font-size:1.5rem; font-weight:800;}
+  .kcal-left.over{color:var(--bad);}
+  .pbar>div.over{background:linear-gradient(90deg,#f87171,#fb923c);}
   @media (min-width:640px){
     .modal-bg{align-items:center;}
     .modal{border-radius:20px;}
@@ -231,8 +250,20 @@
       </form>
     </div>
     <div class="card" id="dangerZone" hidden>
-      <h2>⚠️ Données</h2>
-      <button class="btn secondary" id="resetBtn" type="button">Réinitialiser toutes les données</button>
+      <h2>💾 Mes données</h2>
+      <p class="muted small">Tes données restent sur cet appareil. Exporte-les pour les sauvegarder ou les transférer sur un autre téléphone.</p>
+      <div class="row2" style="margin-top:10px;">
+        <button class="btn secondary" style="margin-top:0;" id="exportBtn" type="button">⬇️ Exporter</button>
+        <button class="btn secondary" style="margin-top:0;" id="importBtn" type="button">⬆️ Importer</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn secondary" id="resetBtn" type="button" style="border-color:rgba(248,113,113,.5); color:var(--bad);">Réinitialiser toutes les données</button>
+    </div>
+    <div class="card">
+      <h2>📱 Installer l'application</h2>
+      <p class="muted small" style="line-height:1.6;">FitCoach s'installe comme une vraie app et fonctionne hors-ligne :<br>
+      • <b>iPhone (Safari)</b> : Partager → « Sur l'écran d'accueil »<br>
+      • <b>Android (Chrome)</b> : Menu ⋮ → « Installer l'application »</p>
     </div>
   </section>
 
@@ -247,6 +278,22 @@
       </div>
       <div class="macro-bar" id="macroBar"></div>
       <div class="legend" id="macroLegend"></div>
+    </div>
+
+    <div class="card">
+      <h2>📒 Journal du jour</h2>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+        <div><span class="kcal-left" id="j-restant">–</span> <span class="muted small">kcal restantes</span></div>
+        <div class="muted small"><span id="j-consomme">0</span> / <span id="j-cible">–</span> kcal · <span id="j-prot">0</span> g prot.</div>
+      </div>
+      <div class="pbar" style="margin-top:10px;"><div id="j-bar" style="width:0%"></div></div>
+      <p class="muted small" style="margin-top:8px;">Coche tes repas du plan ci-dessous quand tu les manges, ou ajoute un extra :</p>
+      <div class="quick-add">
+        <input type="text" id="extraNom" placeholder="Extra (collation, resto…)">
+        <input type="number" id="extraKcal" placeholder="kcal" min="0" step="10">
+        <button class="btn small-btn" id="extraAdd" type="button">＋</button>
+      </div>
+      <div id="extraList" style="margin-top:6px;"></div>
     </div>
 
     <div class="card">
@@ -342,8 +389,17 @@
       <div class="stat-grid">
         <div class="stat"><div class="v" id="s-pas-moy">–</div><div class="l">Pas / jour (moy.)</div></div>
         <div class="stat"><div class="v blue" id="s-eau-moy">–</div><div class="l">Eau / jour (moy.)</div></div>
-        <div class="stat"><div class="v" id="s-seances">–</div><div class="l">Séances faites</div></div>
+        <div class="stat"><div class="v" id="s-seances">–</div><div class="l">Séances (semaine)</div></div>
+        <div class="stat"><div class="v" id="s-streak">–</div><div class="l">🔥 Jours actifs de suite</div></div>
       </div>
+    </div>
+    <div class="card">
+      <h2>👟 Pas — 14 derniers jours</h2>
+      <svg class="chart" id="barsPas" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="card">
+      <h2>💧 Eau — 14 derniers jours</h2>
+      <svg class="chart" id="barsEau" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   </section>
 
@@ -557,7 +613,13 @@ function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
 
 const $ = id => document.getElementById(id);
 const todayKey = () => new Date().toISOString().slice(0,10);
-function jourData(k){ if(!S.jours[k]) S.jours[k] = {eau:0, pas:0}; return S.jours[k]; }
+function jourData(k){
+  if(!S.jours[k]) S.jours[k] = {eau:0, pas:0};
+  const j = S.jours[k];
+  if(!j.mange) j.mange = {};
+  if(!j.extra) j.extra = [];
+  return j;
+}
 const fmt1 = n => (Math.round(n*10)/10).toLocaleString("fr-CA");
 
 /* ════════════════════════════════ CALCULS ════════════════════════════════ */
@@ -623,6 +685,33 @@ $("resetBtn").addEventListener("click", ()=>{
     location.reload();
   }
 });
+/* ─── Export / import des données ─── */
+$("exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(S, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fitcoach-sauvegarde-" + todayKey() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("importBtn").addEventListener("click", ()=> $("importFile").click());
+$("importFile").addEventListener("change", e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const data = JSON.parse(r.result);
+      if(!data || typeof data !== "object" || !("profil" in data) || !Array.isArray(data.poids))
+        throw new Error("format");
+      if(!confirm("Remplacer les données actuelles par cette sauvegarde ?")) return;
+      S = {profil:data.profil, poids:data.poids, jours:data.jours||{}, seances:data.seances||{}};
+      save();
+      location.reload();
+    }catch(err){ alert("Fichier de sauvegarde invalide."); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+});
 function fillProfilForm(){
   const p = S.profil; if(!p) return;
   $("f-sexe").value=p.sexe; $("f-age").value=p.age; $("f-poids").value=p.poids;
@@ -681,31 +770,81 @@ function renderDash(){
 
   // repas du jour
   const dow = (new Date().getDay()+6)%7; // 0 = lundi
-  $("d-repas").innerHTML = mealHTML(dow, c);
+  $("d-repas").innerHTML = mealHTML(dow, c, true);
+
+  // journal calories
+  renderJournal(c);
 
   // séance du jour
   const seance = PROGRAMMES[p.objectif][dow];
   $("d-seance").innerHTML = seanceHTML(seance, dow, true);
   bindSeanceChecks();
 }
+/* Extras (ajout rapide) */
+$("extraAdd").addEventListener("click", ()=>{
+  const k = +$("extraKcal").value;
+  if(!k || k<=0 || k>4000){ alert("Entre un nombre de calories valide."); return; }
+  jourData(todayKey()).extra.push({n:$("extraNom").value.trim(), k:Math.round(k)});
+  $("extraNom").value=""; $("extraKcal").value="";
+  save(); renderDash();
+});
 
 /* ════════════════════════════════ REPAS ════════════════════════════════ */
-function mealHTML(dow, c){
+function mealsFor(dow, c){
   const set = RECETTES[c.g.mealSet];
   const dej = set.dej[dow % 7], din = set.din[dow % 7];
   const kDej = Math.round(c.cal*0.40), kDin = Math.round(c.cal*0.60);
-  const fDej = kDej/dej.k, fDin = kDin/din.k;
-  const one = (m, type, kcal, f) => `
+  return {dej, din, kDej, kDin, fDej:kDej/dej.k, fDin:kDin/din.k};
+}
+function mealHTML(dow, c, isToday){
+  const m = mealsFor(dow, c);
+  const j = isToday ? jourData(todayKey()) : null;
+  const one = (rec, id, type, kcal, f) => `
     <div class="meal">
       <div class="mhead">
-        <div><div class="mtype">${type}</div><h4>${m.n}</h4></div>
-        <div class="kcal">${kcal} kcal · ${Math.round(m.p*f)} g prot.</div>
+        <div><div class="mtype">${type}</div><h4>${rec.n}</h4></div>
+        <div class="kcal">${kcal} kcal · ${Math.round(rec.p*f)} g prot.</div>
       </div>
-      <ul>${m.i.map(x=>`<li>${x}</li>`).join("")}</ul>
-      <div class="prep">${m.prep}</div>
-      <div class="muted small" style="margin-top:6px;">Portion : ×${f.toFixed(1)} de la recette de base (${m.k} kcal).</div>
+      <ul>${rec.i.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <div class="prep">${rec.prep}</div>
+      <div class="muted small" style="margin-top:6px;">Portion : ×${f.toFixed(1)} de la recette de base (${rec.k} kcal).</div>
+      ${isToday ? `<button type="button" class="eat-btn ${j.mange[id]?"eaten":""}" data-meal="${id}">${j.mange[id]?"✔ Mangé":"Marquer comme mangé"}</button>` : ""}
     </div>`;
-  return one(dej,"☀️ Petit déjeuner",kDej,fDej) + one(din,"🌙 Souper / dîner",kDin,fDin);
+  return one(m.dej,"dej","☀️ Petit déjeuner",m.kDej,m.fDej) + one(m.din,"din","🌙 Souper / dîner",m.kDin,m.fDin);
+}
+/* Calories consommées aujourd'hui (repas cochés + extras) */
+function consomme(c){
+  const j = jourData(todayKey());
+  const dow = (new Date().getDay()+6)%7;
+  const m = mealsFor(dow, c);
+  let kcal = 0, prot = 0;
+  if(j.mange.dej){ kcal += m.kDej; prot += Math.round(m.dej.p*m.fDej); }
+  if(j.mange.din){ kcal += m.kDin; prot += Math.round(m.din.p*m.fDin); }
+  j.extra.forEach(e => kcal += e.k);
+  return {kcal, prot};
+}
+function renderJournal(c){
+  const j = jourData(todayKey());
+  const {kcal, prot} = consomme(c);
+  const restant = c.cal - kcal;
+  $("j-restant").textContent = restant.toLocaleString("fr-CA");
+  $("j-restant").classList.toggle("over", restant < 0);
+  $("j-consomme").textContent = kcal.toLocaleString("fr-CA");
+  $("j-cible").textContent = c.cal.toLocaleString("fr-CA");
+  $("j-prot").textContent = prot;
+  const bar = $("j-bar");
+  bar.style.width = Math.min(100, kcal/c.cal*100)+"%";
+  bar.classList.toggle("over", kcal > c.cal);
+  $("extraList").innerHTML = j.extra.map((e,i)=>`
+    <div class="extra-item"><span>${e.n||"Extra"} — ${e.k} kcal</span>
+    <button class="del" data-x="${i}" title="Supprimer">✕</button></div>`).join("");
+  $("extraList").querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{
+    j.extra.splice(+b.dataset.x,1); save(); renderDash();
+  }));
+  document.querySelectorAll("#d-repas .eat-btn").forEach(b=>b.addEventListener("click",()=>{
+    j.mange[b.dataset.meal] = !j.mange[b.dataset.meal];
+    save(); renderDash();
+  }));
 }
 let repasDay = (new Date().getDay()+6)%7;
 function renderRepas(){
@@ -717,7 +856,7 @@ function renderRepas(){
   $("repasDayTabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
     repasDay = +b.dataset.d; renderRepas();
   }));
-  $("repasList").innerHTML = `<p class="muted small" style="margin-bottom:8px;">${JOURS_LMD[repasDay]}</p>` + mealHTML(repasDay, c);
+  $("repasList").innerHTML = `<p class="muted small" style="margin-bottom:8px;">${JOURS_LMD[repasDay]}</p>` + mealHTML(repasDay, c, false);
 }
 
 /* ════════════════════════════════ ENTRAÎNEMENT ════════════════════════════════ */
@@ -936,6 +1075,55 @@ function renderSuivi(){
   const monday = new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
   const wk = monday.toISOString().slice(0,10);
   $("s-seances").textContent = Object.keys(S.seances).filter(k=>k.startsWith(wk)).length;
+  $("s-streak").textContent = calcStreak();
+
+  drawBars($("barsPas"), "pas", c.g.pas, v=>Math.round(v/1000)+"k");
+  drawBars($("barsEau"), "eau", c.eauL*1000, v=>fmt1(v/1000)+" L");
+}
+
+/* Jours actifs consécutifs (pesée, pas, eau, repas coché ou séance faite) */
+function calcStreak(){
+  const seanceDays = new Set(Object.values(S.seances));
+  const poidsDays = new Set(S.poids.map(e=>e.d));
+  let streak = 0;
+  for(let i=0;i<365;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    const j = S.jours[k];
+    const actif = (j && (j.pas>0 || j.eau>0 || (j.mange&&(j.mange.dej||j.mange.din)) || (j.extra&&j.extra.length)))
+      || seanceDays.has(k) || poidsDays.has(k);
+    if(actif) streak++;
+    else if(i===0) continue; // la journée en cours peut ne pas encore être remplie
+    else break;
+  }
+  return streak;
+}
+
+/* Graphique à barres : 14 derniers jours d'un champ journalier vs objectif */
+function drawBars(svg, field, target, fmtV){
+  const W=640, H=170, mL=8, mR=8, mB=22, mT=18;
+  const days = [];
+  for(let i=13;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    days.push({d, v:(S.jours[k]&&S.jours[k][field])||0});
+  }
+  const maxV = Math.max(target, ...days.map(x=>x.v)) * 1.1;
+  const bw = (W-mL-mR)/14;
+  let out = "";
+  const yT = mT + (1-target/maxV)*(H-mT-mB);
+  out += `<line x1="${mL}" y1="${yT}" x2="${W-mR}" y2="${yT}" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+  out += `<text x="${W-mR}" y="${yT-4}" fill="#fbbf24" font-size="10" text-anchor="end">Objectif ${fmtV(target)}</text>`;
+  days.forEach((x,i)=>{
+    const h = x.v>0 ? Math.max(3,(x.v/maxV)*(H-mT-mB)) : 0;
+    const cx = mL + i*bw;
+    const ok = x.v >= target;
+    if(h>0) out += `<rect x="${cx+3}" y="${H-mB-h}" width="${bw-6}" height="${h}" rx="4" fill="${ok?"#34d399":"#2e4a6b"}"/>`;
+    else out += `<rect x="${cx+3}" y="${H-mB-2}" width="${bw-6}" height="2" rx="1" fill="#2c3750"/>`;
+    const lbl = x.d.toLocaleDateString("fr-CA",{day:"numeric"});
+    out += `<text x="${cx+bw/2}" y="${H-6}" fill="#93a0b8" font-size="10" text-anchor="middle">${lbl}</text>`;
+  });
+  svg.innerHTML = out;
 }
 
 /* ─── Graphique SVG : poids réel + trajectoire prévue ─── */
@@ -1001,6 +1189,10 @@ function drawChart(){
   renderHeader();
   if(S.profil){ fillProfilForm(); show("dash"); }
   else show("profil");
+  // PWA : hors-ligne + installation (portée limitée à cette page)
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("fitness-sw.js", {scope:"/fitness.html"}).catch(()=>{});
+  }
 })();
 </script>
 </body>

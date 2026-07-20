@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitCoach">
+<link rel="manifest" href="fitness.webmanifest">
+<link rel="icon" href="fitness-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="fitness-icon.svg">
+<title>FitCoach — Perte de poids & Musculation</title>
+<style>
+  :root{
+    --bg:#0f1420; --card:#1a2130; --card2:#212a3d; --line:#2c3750;
+    --txt:#eef2f8; --muted:#93a0b8; --accent:#34d399; --accent2:#0ea5e9;
+    --warn:#fbbf24; --bad:#f87171; --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--txt); min-height:100vh;
+    padding-bottom:84px;
+  }
+  header.app{
+    padding:18px 20px 10px; display:flex; align-items:center; justify-content:space-between;
+    max-width:760px; margin:0 auto;
+  }
+  header.app h1{font-size:1.25rem; letter-spacing:.3px;}
+  header.app h1 span{color:var(--accent);}
+  .goal-pill{
+    font-size:.75rem; background:var(--card2); border:1px solid var(--line);
+    padding:5px 12px; border-radius:999px; color:var(--muted);
+  }
+  main{max-width:760px; margin:0 auto; padding:6px 16px 24px;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; margin-bottom:14px;
+  }
+  .card h2{font-size:1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .card h3{font-size:.9rem; margin:12px 0 6px;}
+  .muted{color:var(--muted); font-size:.85rem;}
+  .small{font-size:.78rem;}
+  /* nav */
+  nav.tabs{
+    position:fixed; bottom:0; left:0; right:0; background:#141a28; border-top:1px solid var(--line);
+    display:flex; justify-content:space-around; padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index:50;
+  }
+  nav.tabs button{
+    background:none; border:none; color:var(--muted); font-size:.68rem; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:4px 10px; border-radius:10px;
+    font-family:inherit;
+  }
+  nav.tabs button .ico{font-size:1.25rem; line-height:1;}
+  nav.tabs button.active{color:var(--accent);}
+  .view{display:none;}
+  .view.active{display:block; animation:fade .18s ease;}
+  @keyframes fade{from{opacity:.4; transform:translateY(4px);} to{opacity:1; transform:none;}}
+  /* forms */
+  label{display:block; font-size:.8rem; color:var(--muted); margin:10px 0 4px;}
+  input,select,textarea{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card2); color:var(--txt); font-size:.95rem; font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  button.btn{
+    width:100%; padding:13px; border:none; border-radius:12px; background:var(--accent);
+    color:#04281a; font-weight:700; font-size:.95rem; cursor:pointer; margin-top:14px; font-family:inherit;
+  }
+  button.btn.secondary{background:var(--card2); color:var(--txt); border:1px solid var(--line); font-weight:600;}
+  button.btn.small-btn{width:auto; padding:8px 14px; margin-top:0; font-size:.8rem;}
+  /* stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:10px;}
+  .stat{
+    background:var(--card2); border-radius:12px; padding:12px; text-align:center; border:1px solid var(--line);
+  }
+  .stat .v{font-size:1.25rem; font-weight:800; color:var(--accent);}
+  .stat .v.blue{color:var(--accent2);}
+  .stat .l{font-size:.68rem; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:.4px;}
+  .macro-bar{display:flex; height:10px; border-radius:6px; overflow:hidden; margin:10px 0 6px;}
+  .macro-bar div{height:100%;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:.75rem; color:var(--muted);}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px;}
+  /* progress */
+  .pbar{background:var(--card2); border-radius:8px; height:12px; overflow:hidden; border:1px solid var(--line);}
+  .pbar>div{height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent)); border-radius:8px; transition:width .4s;}
+  /* counters (eau / pas) */
+  .counter{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .counter .cbtns{display:flex; gap:8px;}
+  .cbtn{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--line); background:var(--card2);
+    color:var(--txt); font-size:1.3rem; cursor:pointer; font-family:inherit;
+  }
+  .cbtn:active{background:var(--accent); color:#04281a;}
+  /* meals */
+  .meal{
+    background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;
+  }
+  .meal .mhead{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .meal .mtype{font-size:.7rem; text-transform:uppercase; letter-spacing:.6px; color:var(--accent2); font-weight:700;}
+  .meal h4{font-size:.95rem; margin:2px 0 6px;}
+  .meal .kcal{font-size:.8rem; color:var(--accent); font-weight:700; white-space:nowrap;}
+  .meal ul{margin:6px 0 0 18px; font-size:.82rem; color:var(--muted);}
+  .meal .prep{font-size:.8rem; color:var(--muted); margin-top:6px; font-style:italic;}
+  .day-tabs{display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:8px;}
+  .day-tabs button{
+    flex:0 0 auto; padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+    background:var(--card2); color:var(--muted); font-size:.78rem; cursor:pointer; font-family:inherit;
+  }
+  .day-tabs button.active{background:var(--accent); color:#04281a; border-color:var(--accent); font-weight:700;}
+  /* workouts */
+  .wday{border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden;}
+  .wday .whead{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+    background:var(--card2); cursor:pointer; gap:10px;
+  }
+  .wday .whead h4{font-size:.9rem;}
+  .wday .whead .tag{font-size:.68rem; padding:3px 9px; border-radius:999px; font-weight:700;}
+  .tag.muscu{background:rgba(14,165,233,.15); color:var(--accent2);}
+  .tag.cardio{background:rgba(52,211,153,.15); color:var(--accent);}
+  .tag.repos{background:rgba(147,160,184,.15); color:var(--muted);}
+  .wday .wbody{padding:12px 14px; display:none;}
+  .wday.open .wbody{display:block;}
+  .wday table{width:100%; border-collapse:collapse; font-size:.82rem;}
+  .wday td{padding:6px 4px; border-bottom:1px solid var(--line); color:var(--muted);}
+  .wday td:first-child{color:var(--txt);}
+  .wday tr:last-child td{border-bottom:none;}
+  .done-check{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:.85rem; color:var(--muted);}
+  .done-check input{width:20px; height:20px; accent-color:var(--accent);}
+  /* weight log */
+  .entry{
+    display:flex; justify-content:space-between; align-items:center; padding:10px 0;
+    border-bottom:1px solid var(--line); font-size:.88rem; gap:10px;
+  }
+  .entry:last-child{border-bottom:none;}
+  .entry .d{color:var(--muted); font-size:.78rem;}
+  .entry .delta{font-size:.78rem; font-weight:700;}
+  .delta.down{color:var(--accent);} .delta.up{color:var(--bad);} .delta.flat{color:var(--muted);}
+  .entry .reason{font-size:.72rem; color:var(--warn);}
+  .del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; padding:4px;}
+  svg.chart{width:100%; height:auto; display:block;}
+  /* alerts */
+  .alert{
+    border-radius:12px; padding:12px 14px; font-size:.85rem; margin-bottom:10px; line-height:1.45;
+  }
+  .alert.ok{background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.35);}
+  .alert.warn{background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.35);}
+  .alert.bad{background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.35);}
+  .alert b{display:block; margin-bottom:4px;}
+  .alert ul{margin:6px 0 0 18px;}
+  .alert li{margin-bottom:3px;}
+  /* modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(6,10,18,.75); display:none; z-index:100;
+    align-items:flex-end; justify-content:center;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--card); border:1px solid var(--line); border-radius:20px 20px 0 0;
+    padding:20px; width:100%; max-width:760px; max-height:88vh; overflow-y:auto;
+  }
+  .modal h2{font-size:1.05rem; margin-bottom:6px;}
+  .chip-wrap{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .chip{
+    padding:8px 13px; border-radius:999px; border:1px solid var(--line); background:var(--card2);
+    color:var(--muted); font-size:.8rem; cursor:pointer; font-family:inherit;
+  }
+  .chip.sel{background:rgba(251,191,36,.15); border-color:var(--warn); color:var(--warn); font-weight:600;}
+  .backlink{display:inline-block; margin:14px 20px 0; color:var(--muted); font-size:.8rem; text-decoration:none;}
+  /* journal calories */
+  .eat-btn{
+    border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:999px;
+    padding:7px 14px; font-size:.78rem; cursor:pointer; margin-top:10px; font-family:inherit;
+  }
+  .eat-btn.eaten{background:rgba(52,211,153,.15); border-color:var(--accent); color:var(--accent); font-weight:700;}
+  .quick-add{display:grid; grid-template-columns:1fr 90px auto; gap:8px; margin-top:10px;}
+  .extra-item{display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--muted); padding:6px 0; border-bottom:1px solid var(--line);}
+  .extra-item:last-child{border-bottom:none;}
+  .kcal-left{font-size:1.5rem; font-weight:800;}
+  .kcal-left.over{color:var(--bad);}
+  .pbar>div.over{background:linear-gradient(90deg,#f87171,#fb923c);}
+  /* routine */
+  .rt-item{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); cursor:default;}
+  .rt-item:last-child{border-bottom:none;}
+  .rt-item.clickable{cursor:pointer;}
+  .rt-time{
+    flex:0 0 auto; font-size:.75rem; font-weight:700; background:var(--card2); border:1px solid var(--line);
+    padding:4px 9px; border-radius:8px; color:var(--accent2); font-variant-numeric:tabular-nums;
+  }
+  .rt-item.late .rt-time{color:var(--warn); border-color:rgba(251,191,36,.5);}
+  .rt-item.done{opacity:.55;}
+  .rt-item.done .rt-time{color:var(--accent);}
+  .rt-label{flex:1; font-size:.86rem;}
+  .rt-label .sub{display:block; font-size:.72rem; color:var(--muted);}
+  .rt-check{font-size:1.05rem; width:24px; text-align:center;}
+  .banner-lundi{
+    background:rgba(14,165,233,.1); border:1px solid rgba(14,165,233,.4); border-radius:12px;
+    padding:11px 14px; font-size:.85rem; margin-bottom:14px;
+  }
+  @media (min-width:640px){
+    .modal-bg{align-items:center;}
+    .modal{border-radius:20px;}
+  }
+</style>
+</head>
+<body>
+
+<a class="backlink" href="/" id="backlink" hidden>&larr; comfortium.ca</a>
+<header class="app">
+  <h1>Fit<span>Coach</span></h1>
+  <span class="goal-pill" id="headerGoal"></span>
+</header>
+
+<main>
+
+  <!-- ═══════════ ONBOARDING / PROFIL ═══════════ -->
+  <section class="view" id="view-profil">
+    <div class="card">
+      <h2>👤 Mon profil & objectif</h2>
+      <p class="muted">Ces informations servent à calculer tes besoins caloriques (formule Mifflin-St Jeor) et à bâtir ton programme.</p>
+      <form id="profilForm">
+        <div class="row2">
+          <div>
+            <label>Sexe</label>
+            <select id="f-sexe">
+              <option value="h">Homme</option>
+              <option value="f">Femme</option>
+            </select>
+          </div>
+          <div>
+            <label>Âge (ans)</label>
+            <input type="number" id="f-age" min="14" max="100" required>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label>Poids actuel (kg)</label>
+            <input type="number" id="f-poids" min="35" max="300" step="0.1" required>
+          </div>
+          <div>
+            <label>Taille (cm)</label>
+            <input type="number" id="f-taille" min="120" max="230" required>
+          </div>
+        </div>
+        <label>Niveau d'activité quotidien (hors entraînement)</label>
+        <select id="f-activite">
+          <option value="1.2">Sédentaire (bureau, peu de marche)</option>
+          <option value="1.375" selected>Légèrement actif (marche régulière)</option>
+          <option value="1.55">Actif (debout / en mouvement souvent)</option>
+          <option value="1.725">Très actif (travail physique)</option>
+        </select>
+        <label>Objectif</label>
+        <select id="f-objectif">
+          <option value="shred">🔥 Shred — sèche rapide (déficit marqué)</option>
+          <option value="perte">⚖️ Perte de poids durable (déficit modéré)</option>
+          <option value="muscu">💪 Musculation / recomposition (maintien)</option>
+          <option value="masse">📈 Prise de masse (surplus contrôlé)</option>
+        </select>
+        <label>Poids désiré (kg)</label>
+        <input type="number" id="f-cible" min="35" max="300" step="0.1" required>
+        <div class="row2">
+          <div>
+            <label>% de gras actuel</label>
+            <input type="number" id="f-gras" min="3" max="60" step="0.1" placeholder="Auto (estimé)">
+          </div>
+          <div>
+            <label>% de gras désiré</label>
+            <input type="number" id="f-gras-cible" min="3" max="60" step="0.1" placeholder="Auto (recommandé)">
+          </div>
+        </div>
+        <p class="muted small" style="margin-top:4px;">Laisse vide si tu ne le connais pas : l'app estime ton % actuel (formule Deurenberg) et recommande la cible selon ton but.</p>
+        <label>Repas par jour</label>
+        <select id="f-repas">
+          <option value="auto" selected>🤖 Recommandé par l'app (selon mon but)</option>
+          <option value="2">2 repas — petit déjeuner + souper</option>
+          <option value="3">3 repas — petit déjeuner + déjeuner + souper</option>
+          <option value="4">4 repas — + collation</option>
+          <option value="3c">3 repas — petit déjeuner + collation + souper</option>
+          <option value="if">2 repas — déjeuner + souper (jeûne 16/8)</option>
+        </select>
+        <label>Période pour atteindre mon poids</label>
+        <select id="f-periode">
+          <option value="auto" selected>🤖 Au rythme recommandé (selon mon but)</option>
+          <option value="13">3 mois</option>
+          <option value="26">6 mois</option>
+          <option value="52">1 an</option>
+          <option value="perso">⚙️ Personnalisée (en semaines)</option>
+        </select>
+        <input type="number" id="f-periode-sem" min="4" max="156" placeholder="Nombre de semaines (ex. : 20)" hidden style="margin-top:8px;">
+        <label>Programme d'entraînement</label>
+        <select id="f-programme">
+          <option value="auto" selected>🤖 Automatique (adapté à mon objectif)</option>
+          <option value="shred">🔥 Shred</option>
+          <option value="muscu">💪 Musculation</option>
+          <option value="perte">⚖️ Perte de poids</option>
+          <option value="masse">📈 Prise de masse / gain de poids</option>
+          <option value="graisse">🎯 Perte de graisse (circuits)</option>
+          <option value="cardio">❤️ Cardio équipé (tapis, rameur, sac de boxe…)</option>
+          <option value="calisthenie">🤸 Calisthénie (poids du corps)</option>
+          <option value="maison">🏠 Maison (sans salle)</option>
+          <option value="custom">🛠️ Mon programme (personnalisé)</option>
+        </select>
+        <button class="btn" type="submit">Calculer mon programme</button>
+      </form>
+    </div>
+    <div class="card" id="dangerZone" hidden>
+      <h2>💾 Mes données</h2>
+      <p class="muted small">Tes données restent sur cet appareil. Exporte-les pour les sauvegarder ou les transférer sur un autre téléphone.</p>
+      <div class="row2" style="margin-top:10px;">
+        <button class="btn secondary" style="margin-top:0;" id="exportBtn" type="button">⬇️ Exporter</button>
+        <button class="btn secondary" style="margin-top:0;" id="importBtn" type="button">⬆️ Importer</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn secondary" id="resetBtn" type="button" style="border-color:rgba(248,113,113,.5); color:var(--bad);">Réinitialiser toutes les données</button>
+    </div>
+    <div class="card">
+      <h2>📱 Installer l'application</h2>
+      <p class="muted small" style="line-height:1.6;">FitCoach s'installe comme une vraie app et fonctionne hors-ligne :<br>
+      • <b>iPhone (Safari)</b> : Partager → « Sur l'écran d'accueil »<br>
+      • <b>Android (Chrome)</b> : Menu ⋮ → « Installer l'application »</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ TABLEAU DE BORD ═══════════ -->
+  <section class="view" id="view-dash">
+    <div id="d-banner"></div>
+    <div class="card">
+      <h2>🕐 Ma routine du jour</h2>
+      <div id="routineList"></div>
+      <button class="btn secondary" id="routineEditBtn" type="button" style="margin-top:10px;">⚙️ Personnaliser ma routine</button>
+      <div id="routineEditor" hidden style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2>🎯 Objectif calorique du jour</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="v" id="d-cal">–</div><div class="l">kcal / jour</div></div>
+        <div class="stat"><div class="v blue" id="d-tdee">–</div><div class="l">Maintien (TDEE)</div></div>
+        <div class="stat"><div class="v" id="d-deficit">–</div><div class="l" id="d-deficit-l">Déficit</div></div>
+      </div>
+      <div class="macro-bar" id="macroBar"></div>
+      <div class="legend" id="macroLegend"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Mon plan complet</h2>
+      <div id="d-plan"></div>
+    </div>
+
+    <div class="card">
+      <h2>📒 Journal du jour</h2>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+        <div><span class="kcal-left" id="j-restant">–</span> <span class="muted small">kcal restantes</span></div>
+        <div class="muted small"><span id="j-consomme">0</span> / <span id="j-cible">–</span> kcal · <span id="j-prot">0</span> g prot.</div>
+      </div>
+      <div class="pbar" style="margin-top:10px;"><div id="j-bar" style="width:0%"></div></div>
+      <p class="muted small" style="margin-top:8px;">Coche tes repas du plan ci-dessous quand tu les manges, ou ajoute un extra :</p>
+      <div class="quick-add">
+        <input type="text" id="extraNom" placeholder="Extra (collation, resto…)">
+        <input type="number" id="extraKcal" placeholder="kcal" min="0" step="10">
+        <button class="btn small-btn" id="extraAdd" type="button">＋</button>
+      </div>
+      <div id="extraList" style="margin-top:6px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>⚖️ Progression vers <span id="d-cible-titre"></span></h2>
+      <div class="pbar"><div id="d-pbar" style="width:0%"></div></div>
+      <p class="muted" style="margin-top:8px;" id="d-prog-txt"></p>
+      <p class="muted small" id="d-eta"></p>
+    </div>
+
+    <div class="card">
+      <h2>💧 Eau aujourd'hui</h2>
+      <div class="counter">
+        <div>
+          <div style="font-size:1.3rem; font-weight:800;"><span id="d-eau">0</span> <span class="muted" style="font-size:.85rem;">/ <span id="d-eau-cible">2.5</span> L</span></div>
+          <div class="muted small" id="d-eau-verres"></div>
+        </div>
+        <div class="cbtns">
+          <button class="cbtn" id="eauMoins">−</button>
+          <button class="cbtn" id="eauPlus">＋</button>
+        </div>
+      </div>
+      <div class="pbar" style="margin-top:10px;"><div id="d-eau-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>👟 Pas aujourd'hui</h2>
+      <div class="counter">
+        <div>
+          <div style="font-size:1.3rem; font-weight:800;"><span id="d-pas">0</span> <span class="muted" style="font-size:.85rem;">/ <span id="d-pas-cible">10000</span></span></div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="pasInput" placeholder="Nb de pas" style="width:120px;" min="0" step="100">
+          <button class="btn small-btn" id="pasSave" type="button">OK</button>
+        </div>
+      </div>
+      <div class="pbar" style="margin-top:10px;"><div id="d-pas-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>🍽️ Mes repas d'aujourd'hui</h2>
+      <div id="d-repas"></div>
+    </div>
+
+    <div class="card">
+      <h2>🏋️ Séance du jour</h2>
+      <div id="d-seance"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ REPAS ═══════════ -->
+  <section class="view" id="view-repas">
+    <div class="card">
+      <h2>🍽️ Programme repas de la semaine</h2>
+      <p class="muted" id="r-desc"></p>
+      <div class="day-tabs" id="repasDayTabs"></div>
+      <div id="repasList"></div>
+    </div>
+    <div class="card">
+      <h2>🥗 Menus du régime</h2>
+      <div class="day-tabs" id="menuRegimeMenus"></div>
+      <p class="muted small" id="menuRegimeDesc"></p>
+      <div class="day-tabs" id="menuRegimeTabs" style="margin-top:10px;"></div>
+      <div id="menuRegimeList"></div>
+    </div>
+    <div class="card">
+      <h2>📖 Mes recettes — sections personnalisées</h2>
+      <p class="muted small">Crée tes propres sections (smoothies, desserts protéinés, plats express, recettes de famille…) et remplis-les de recettes. Chaque recette peut être ajoutée au journal du jour en un clic.</p>
+      <div class="row2" style="margin-top:10px;">
+        <input type="text" id="secNom" placeholder="Nom de la section" maxlength="60">
+        <button class="btn small-btn" style="width:100%; padding:11px;" id="secAdd" type="button">➕ Ajouter la section</button>
+      </div>
+      <div id="secList" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2>💡 Règles simples</h2>
+      <ul class="muted" style="margin-left:18px; font-size:.85rem; line-height:1.7;">
+        <li>Protéines à chaque repas (~<span id="r-prot"></span> g/jour au total).</li>
+        <li>Bois un grand verre d'eau avant chaque repas.</li>
+        <li>Collation permise si vraie faim : fruits, yogourt grec, poignée de noix.</li>
+        <li>Pas de calories liquides (jus, boissons sucrées, alcool) pendant la phase de perte.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══════════ ENTRAÎNEMENT ═══════════ -->
+  <section class="view" id="view-training">
+    <div class="card">
+      <h2>🏋️ Plan hebdomadaire — <span id="t-goal"></span></h2>
+      <label>Changer de programme</label>
+      <select id="progSelect">
+        <option value="auto">🤖 Automatique (adapté à mon objectif)</option>
+        <option value="shred">🔥 Shred</option>
+        <option value="muscu">💪 Musculation</option>
+        <option value="perte">⚖️ Perte de poids</option>
+        <option value="masse">📈 Prise de masse / gain de poids</option>
+        <option value="graisse">🎯 Perte de graisse (circuits)</option>
+        <option value="cardio">❤️ Cardio équipé (tapis, rameur, sac de boxe…)</option>
+        <option value="calisthenie">🤸 Calisthénie (poids du corps)</option>
+        <option value="maison">🏠 Maison (sans salle)</option>
+        <option value="custom">🛠️ Mon programme (personnalisé)</option>
+      </select>
+      <p class="muted" id="t-desc" style="margin-top:10px;"></p>
+      <div id="customEditor" hidden style="margin-top:12px;"></div>
+      <div id="trainingList" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SUIVI ═══════════ -->
+  <section class="view" id="view-suivi">
+    <div class="card">
+      <h2>⚖️ Suivi du poids & % de gras</h2>
+      <div class="row2">
+        <input type="number" id="poidsInput" placeholder="Poids (kg)" step="0.1" min="35" max="300">
+        <input type="number" id="grasInput" placeholder="% gras (optionnel)" step="0.1" min="3" max="60">
+      </div>
+      <button class="btn" id="poidsSave" type="button" style="margin-top:10px;">Enregistrer la pesée</button>
+      <p class="muted small" style="margin-top:6px;">📅 Mesure les deux chaque lundi matin à jeun — c'est ce qui permet de voir si tu perds du gras ou du muscle.</p>
+      <div id="analyse" style="margin-top:12px;"></div>
+      <div style="margin-top:8px;"><svg class="chart" id="chart" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <h3>Historique</h3>
+      <div id="poidsList"></div>
+    </div>
+    <div class="card">
+      <h2>🚨 Alertes de routine (7 derniers jours)</h2>
+      <div id="alertes"></div>
+    </div>
+    <div class="card">
+      <h2>📊 7 derniers jours</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="v" id="s-pas-moy">–</div><div class="l">Pas / jour (moy.)</div></div>
+        <div class="stat"><div class="v blue" id="s-eau-moy">–</div><div class="l">Eau / jour (moy.)</div></div>
+        <div class="stat"><div class="v" id="s-seances">–</div><div class="l">Séances (semaine)</div></div>
+        <div class="stat"><div class="v" id="s-streak">–</div><div class="l">🔥 Jours actifs de suite</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>👟 Pas — 14 derniers jours</h2>
+      <svg class="chart" id="barsPas" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="card">
+      <h2>💧 Eau — 14 derniers jours</h2>
+      <svg class="chart" id="barsEau" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button data-view="dash"><span class="ico">🏠</span>Accueil</button>
+  <button data-view="repas"><span class="ico">🍽️</span>Repas</button>
+  <button data-view="training"><span class="ico">🏋️</span>Sport</button>
+  <button data-view="suivi"><span class="ico">📈</span>Suivi</button>
+  <button data-view="profil"><span class="ico">👤</span>Profil</button>
+</nav>
+
+<!-- ═══════════ MODAL RAISONS / CORRECTIONS ═══════════ -->
+<div class="modal-bg" id="reasonModal">
+  <div class="modal">
+    <h2>🧐 Que s'est-il passé ?</h2>
+    <p class="muted" id="reasonIntro"></p>
+    <div class="chip-wrap" id="reasonChips"></div>
+    <label>Note (optionnel)</label>
+    <textarea id="reasonNote" rows="2" placeholder="Ex. : souper au restaurant vendredi…"></textarea>
+    <button class="btn" id="reasonSave" type="button">Voir mes corrections</button>
+    <button class="btn secondary" id="reasonSkip" type="button">Passer</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ════════════════════════════════ DONNÉES ════════════════════════════════ */
+const STORE_KEY = "fitcoach_v1";
+const JOURS = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+const JOURS_LMD = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+
+const GOALS = {
+  shred: {label:"🔥 Shred",     pct:-0.25, rate:-0.75, pas:12000, mealSet:"perte",
+          desc:"Déficit marqué (~25 %) : perte rapide de gras avec beaucoup de protéines et d'activité pour garder le muscle."},
+  perte: {label:"⚖️ Perte de poids", pct:-0.18, rate:-0.5, pas:10000, mealSet:"perte",
+          desc:"Déficit modéré (~18 %) : perte durable d'environ 0,5 kg par semaine, facile à maintenir."},
+  muscu: {label:"💪 Musculation", pct:0.0,  rate:0, pas:8000,  mealSet:"muscu",
+          desc:"Calories de maintien : recomposition corporelle — construire du muscle en gardant le gras stable."},
+  masse: {label:"📈 Prise de masse", pct:0.10, rate:0.3, pas:7000, mealSet:"masse",
+          desc:"Surplus contrôlé (~10 %) : environ +0,25 à 0,35 kg par semaine pour maximiser le muscle et limiter le gras."}
+};
+
+/* Répartition macros par objectif : [prot, gluc, lip] en % des calories */
+const MACROS = { shred:[0.40,0.35,0.25], perte:[0.35,0.40,0.25], muscu:[0.30,0.45,0.25], masse:[0.28,0.50,0.22] };
+
+/* ─── Structures de repas : combinaisons possibles dans la journée.
+   dej = petit déjeuner, lun = déjeuner (midi), col = collation, din = souper ─── */
+const MEAL_STRUCTS = {
+  "2":  {label:"2 repas — petit déjeuner + souper",                    meals:["dej","din"]},
+  "3":  {label:"3 repas — petit déjeuner + déjeuner + souper",         meals:["dej","lun","din"]},
+  "4":  {label:"4 repas — déjeuners + collation + souper",             meals:["dej","lun","col","din"]},
+  "if": {label:"2 repas — déjeuner + souper (jeûne 16/8)",             meals:["lun","din"]},
+  "3c": {label:"3 repas — petit déjeuner + collation + souper",        meals:["dej","col","din"]}
+};
+/* Poids relatif de chaque repas (normalisé sur les repas choisis) */
+const MEAL_W = { dej:30, lun:35, col:12, din:38 };
+const MEAL_LABELS = { dej:"☀️ Petit déjeuner", lun:"🥗 Déjeuner", col:"🍎 Collation", din:"🌙 Souper" };
+/* Structure recommandée par l'app selon l'objectif */
+const MEALS_AUTO = { shred:"3", perte:"2", muscu:"4", masse:"4" };
+
+/* ─── % de gras corporel cible recommandé selon l'objectif et le sexe ─── */
+const GRAS_RECO = {
+  h: { shred:11, perte:16, muscu:14, masse:16 },
+  f: { shred:19, perte:24, muscu:22, masse:24 }
+};
+
+/* ─── Recettes : 7 petits déjeuners + 7 dîners par famille d'objectif.
+   kcal/prot = valeurs de base pour 1 portion; l'app affiche un facteur de portion. ─── */
+const RECETTES = {
+  perte: {
+    dej: [
+      {n:"Omelette épinards & feta", k:380, p:28, i:["3 œufs","1 poignée d'épinards","30 g feta","1 tranche pain complet"], prep:"Battre les œufs, cuire avec épinards, ajouter la feta. Servir avec le pain grillé."},
+      {n:"Yogourt grec, fruits rouges & granola", k:350, p:30, i:["250 g yogourt grec 0-2 %","100 g fruits rouges","30 g granola","1 c. à thé miel"], prep:"Tout mélanger dans un bol. Prêt en 2 minutes."},
+      {n:"Gruau protéiné banane-cannelle", k:400, p:27, i:["50 g flocons d'avoine","1 scoop protéine vanille","½ banane","cannelle"], prep:"Cuire l'avoine dans l'eau, incorporer la protéine hors du feu, garnir de banane."},
+      {n:"Toast avocat & œufs pochés", k:420, p:22, i:["2 tranches pain complet","½ avocat","2 œufs","piment d'Espelette"], prep:"Écraser l'avocat sur les toasts, ajouter les œufs pochés."},
+      {n:"Smoothie vert protéiné", k:340, p:30, i:["1 scoop protéine","1 poignée d'épinards","½ banane","250 ml lait d'amande","1 c. à soupe beurre d'arachide"], prep:"Tout passer au mélangeur 30 secondes."},
+      {n:"Cottage, pêche & amandes", k:330, p:29, i:["250 g fromage cottage","1 pêche (ou pomme)","15 g amandes"], prep:"Couper le fruit, mélanger avec le cottage et les amandes."},
+      {n:"Pancakes avoine-banane", k:390, p:25, i:["1 banane","2 œufs","40 g avoine","yogourt grec pour garnir"], prep:"Mixer banane, œufs et avoine; cuire en petites crêpes; garnir de yogourt."}
+    ],
+    din: [
+      {n:"Poulet grillé, brocoli & riz", k:560, p:45, i:["180 g poitrine de poulet","200 g brocoli","120 g riz cuit","1 c. à soupe huile d'olive"], prep:"Griller le poulet assaisonné, cuire le brocoli vapeur, servir avec le riz."},
+      {n:"Saumon au four, patate douce & asperges", k:590, p:40, i:["160 g saumon","200 g patate douce","150 g asperges","citron"], prep:"Tout rôtir au four 20 min à 200 °C avec citron et herbes."},
+      {n:"Chili de dinde aux haricots", k:540, p:42, i:["150 g dinde hachée","200 g haricots rouges","tomates concassées","oignon, épices chili"], prep:"Revenir l'oignon et la dinde, ajouter tomates, haricots et épices, mijoter 20 min."},
+      {n:"Bol-repas thon, quinoa & légumes", k:520, p:38, i:["1 boîte de thon","120 g quinoa cuit","concombre, tomates, poivron","vinaigrette citron-olive"], prep:"Assembler tous les ingrédients en bol, arroser de vinaigrette."},
+      {n:"Sauté de bœuf & légumes asiatique", k:570, p:40, i:["150 g bœuf en lanières","légumes sautés (poivrons, oignon, pak choï)","sauce soya réduite en sodium","100 g riz"], prep:"Saisir le bœuf, ajouter légumes et sauce, servir sur riz."},
+      {n:"Crevettes à l'ail, courgettes & pâtes complètes", k:530, p:36, i:["180 g crevettes","1 courgette","80 g pâtes complètes","ail, huile d'olive"], prep:"Sauter crevettes et courgette à l'ail, mélanger aux pâtes cuites."},
+      {n:"Tofu croustillant, légumes rôtis & couscous", k:510, p:30, i:["200 g tofu ferme","légumes rôtis","100 g couscous complet","sauce tamari"], prep:"Rôtir tofu et légumes au four 25 min, servir sur couscous."}
+    ],
+    lun: [
+      {n:"Salade César au poulet (légère)", k:480, p:40, i:["150 g poulet grillé","laitue romaine","vinaigrette César légère","croûtons, parmesan"], prep:"Assembler la salade, poulet tranché sur le dessus."},
+      {n:"Wrap thon-yogourt & crudités", k:450, p:35, i:["1 boîte de thon","2 c. à soupe yogourt grec","1 tortilla complète","laitue, tomates"], prep:"Mélanger thon et yogourt, garnir la tortilla et rouler."},
+      {n:"Bol quinoa, pois chiches & feta", k:470, p:25, i:["120 g quinoa cuit","150 g pois chiches","30 g feta","concombre, tomates, citron"], prep:"Tout assembler, arroser de citron et d'un filet d'huile."},
+      {n:"Soupe-repas aux lentilles + pain", k:460, p:26, i:["300 ml soupe aux lentilles","1 tranche pain complet","1 filet d'huile d'olive"], prep:"Réchauffer la soupe, servir avec le pain grillé."},
+      {n:"Salade œufs, avocat & épinards", k:450, p:24, i:["3 œufs durs","½ avocat","épinards","vinaigrette moutarde"], prep:"Assembler la salade avec les œufs tranchés."},
+      {n:"Sandwich dinde-crudités", k:440, p:32, i:["100 g dinde tranchée","2 tranches pain complet","moutarde, laitue, tomate","1 fruit"], prep:"Monter le sandwich, accompagner du fruit."},
+      {n:"Restes du souper d'hier (portion réduite)", k:480, p:35, i:["¾ de la portion du souper précédent"], prep:"Réchauffer — le meal prep le plus simple qui existe."}
+    ],
+    col: [
+      {n:"Yogourt grec & petits fruits", k:160, p:18, i:["150 g yogourt grec 0-2 %","80 g petits fruits"], prep:"Mélanger."},
+      {n:"Pomme & amandes", k:170, p:5, i:["1 pomme","15 g amandes"], prep:"Croquer."},
+      {n:"Shake protéiné à l'eau", k:130, p:25, i:["1 scoop protéine","250 ml d'eau"], prep:"Secouer 10 secondes."},
+      {n:"2 œufs durs", k:140, p:12, i:["2 œufs","sel, poivre"], prep:"Cuire 9 min à l'avance, garder au frigo."},
+      {n:"Cottage & concombre", k:120, p:14, i:["100 g fromage cottage","½ concombre"], prep:"Tremper le concombre dans le cottage."},
+      {n:"Houmous & crudités", k:150, p:6, i:["3 c. à soupe houmous","carottes, céleri, poivron"], prep:"Tremper."},
+      {n:"Barre protéinée", k:180, p:15, i:["1 barre protéinée (choisir < 200 kcal)"], prep:"Prête à emporter."}
+    ]
+  },
+  muscu: {
+    dej: [
+      {n:"Omelette 4 œufs, fromage & toast", k:520, p:38, i:["4 œufs","30 g fromage","2 tranches pain complet","tomates cerises"], prep:"Omelette au fromage, servie avec toasts et tomates."},
+      {n:"Bol yogourt grec, granola & beurre d'arachide", k:520, p:38, i:["300 g yogourt grec","40 g granola","1 c. à soupe beurre d'arachide","1 banane"], prep:"Assembler le bol, trancher la banane dessus."},
+      {n:"Gruau protéiné complet", k:540, p:35, i:["70 g avoine","1 scoop protéine","1 c. à soupe beurre d'amande","1 fruit"], prep:"Cuire l'avoine, incorporer protéine et beurre d'amande."},
+      {n:"Wrap œufs brouillés & jambon de dinde", k:500, p:36, i:["3 œufs","2 tranches jambon de dinde","1 grande tortilla complète","épinards"], prep:"Brouiller les œufs, rouler le tout dans la tortilla."},
+      {n:"Smoothie gainer maison", k:550, p:40, i:["1 scoop protéine","1 banane","60 g avoine","300 ml lait","1 c. à soupe beurre d'arachide"], prep:"Tout passer au mélangeur."},
+      {n:"Pain doré protéiné", k:520, p:34, i:["3 tranches pain complet","2 œufs + lait","1 scoop protéine dans le mélange","sirop d'érable léger"], prep:"Tremper le pain dans le mélange œufs-lait-protéine, dorer à la poêle."},
+      {n:"Bagel saumon fumé & fromage à la crème léger", k:510, p:32, i:["1 bagel complet","80 g saumon fumé","fromage à la crème léger","concombre"], prep:"Garnir le bagel grillé."}
+    ],
+    din: [
+      {n:"Poulet rôti, riz & sauce yogourt", k:680, p:52, i:["200 g poulet","160 g riz cuit","sauce yogourt-ail","salade verte"], prep:"Griller le poulet, servir avec riz, sauce et salade."},
+      {n:"Pâtes bolognaises maison", k:700, p:45, i:["150 g bœuf maigre haché","110 g pâtes complètes","sauce tomate","parmesan"], prep:"Sauce bolognaise express 15 min, mélanger aux pâtes."},
+      {n:"Saumon teriyaki, riz & edamames", k:690, p:44, i:["180 g saumon","150 g riz","100 g edamames","sauce teriyaki"], prep:"Laquer le saumon au four, servir avec riz et edamames."},
+      {n:"Bol burrito au poulet", k:670, p:48, i:["180 g poulet","riz, haricots noirs","maïs, salsa, avocat","fromage râpé"], prep:"Assembler le bol avec tous les ingrédients."},
+      {n:"Steak, pommes de terre rôties & haricots verts", k:700, p:48, i:["180 g steak","250 g pommes de terre","150 g haricots verts","beurre à l'ail léger"], prep:"Rôtir les pommes de terre, griller le steak, cuire les haricots vapeur."},
+      {n:"Curry de pois chiches & poulet", k:650, p:42, i:["150 g poulet","150 g pois chiches","lait de coco léger","riz basmati, épices curry"], prep:"Mijoter poulet, pois chiches et lait de coco aux épices; servir sur riz."},
+      {n:"Poke bowl thon ou tofu", k:640, p:40, i:["150 g thon frais ou tofu","riz à sushi","edamames, mangue, concombre","sauce soya-sésame"], prep:"Assembler le bol, arroser de sauce."}
+    ],
+    lun: [
+      {n:"Bol poulet-riz-brocoli express", k:620, p:45, i:["150 g poulet","150 g riz cuit","brocoli vapeur","sauce au choix"], prep:"Le classique meal prep — réchauffer et manger."},
+      {n:"Wrap double poulet-fromage", k:600, p:42, i:["150 g poulet","1 grande tortilla","30 g fromage râpé","laitue, salsa"], prep:"Garnir, rouler, griller 2 min à la poêle."},
+      {n:"Pâtes au thon & tomates", k:580, p:38, i:["90 g pâtes complètes","1 boîte de thon","sauce tomate","parmesan"], prep:"Mélanger les pâtes cuites, le thon et la sauce chaude."},
+      {n:"Bol burrito au bœuf", k:640, p:40, i:["120 g bœuf haché maigre","riz, haricots noirs","maïs, salsa","fromage"], prep:"Assembler le bol."},
+      {n:"Sandwich poulet-avocat + verre de lait", k:610, p:42, i:["120 g poulet","½ avocat","2 tranches pain complet","250 ml lait"], prep:"Monter le sandwich, boire le lait."},
+      {n:"Saumon & riz express", k:620, p:40, i:["1 conserve de saumon","150 g riz","edamames ou légumes verts","sauce soya"], prep:"Assembler en bol, réchauffer 2 min."},
+      {n:"Restes du souper d'hier", k:620, p:42, i:["1 portion complète du souper précédent"], prep:"Réchauffer."}
+    ],
+    col: [
+      {n:"Shake protéiné au lait", k:250, p:30, i:["1 scoop protéine","300 ml lait"], prep:"Secouer."},
+      {n:"Yogourt grec & granola", k:240, p:20, i:["200 g yogourt grec","25 g granola"], prep:"Mélanger."},
+      {n:"Toast beurre d'arachide & banane", k:280, p:10, i:["1 tranche pain complet","1 c. à soupe beurre d'arachide","½ banane"], prep:"Tartiner, trancher la banane dessus."},
+      {n:"Fromage, craquelins & raisins", k:250, p:12, i:["30 g fromage","4-5 craquelins","poignée de raisins"], prep:"Assembler l'assiette."},
+      {n:"2 œufs durs & 1 fruit", k:220, p:13, i:["2 œufs durs","1 fruit"], prep:"Prêt en 30 secondes si les œufs sont cuits d'avance."},
+      {n:"Smoothie fruits & protéine", k:260, p:25, i:["1 scoop protéine","150 g fruits surgelés","250 ml lait ou eau"], prep:"Mélangeur 30 s."},
+      {n:"Mélange du randonneur", k:230, p:7, i:["40 g noix + fruits séchés"], prep:"À garder dans le sac de sport."}
+    ]
+  },
+  masse: {
+    dej: [
+      {n:"Gruau gainer avoine-beurre d'arachide", k:700, p:40, i:["90 g avoine","1 scoop protéine","2 c. à soupe beurre d'arachide","1 banane","300 ml lait"], prep:"Cuire l'avoine dans le lait, ajouter le reste."},
+      {n:"4 œufs, toasts & avocat", k:720, p:38, i:["4 œufs","3 tranches pain complet","1 avocat","fromage"], prep:"Œufs au goût, toasts beurrés d'avocat."},
+      {n:"Smoothie masse 1000", k:750, p:45, i:["2 scoops protéine","1 banane","80 g avoine","400 ml lait entier","beurre d'arachide"], prep:"Tout au mélangeur — le déjeuner le plus rapide."},
+      {n:"Pancakes protéinés & sirop", k:680, p:40, i:["80 g avoine","2 œufs","1 scoop protéine","1 banane","sirop d'érable"], prep:"Mixer, cuire en crêpes, napper de sirop."},
+      {n:"Bagel double œuf-fromage-jambon", k:690, p:38, i:["1 bagel","2 œufs","2 tranches fromage","3 tranches jambon de dinde"], prep:"Monter le bagel déjeuner gourmand."},
+      {n:"Yogourt grec gainer", k:650, p:42, i:["350 g yogourt grec","60 g granola","beurre d'amande","miel, fruits"], prep:"Assembler le bol."},
+      {n:"Burrito déjeuner", k:710, p:40, i:["3 œufs","haricots noirs","fromage, salsa","grande tortilla, avocat"], prep:"Garnir la tortilla des œufs brouillés et du reste, rouler."}
+    ],
+    din: [
+      {n:"Poulet, riz & avocat (portion athlète)", k:850, p:55, i:["220 g poulet","200 g riz cuit","1 avocat","huile d'olive, légumes"], prep:"Griller le poulet, assembler l'assiette généreuse."},
+      {n:"Spaghetti bolognaise XL", k:880, p:50, i:["180 g bœuf haché","140 g pâtes","sauce tomate","parmesan, pain à l'ail"], prep:"Bolognaise classique, portion généreuse."},
+      {n:"Saumon, patates douces & beurre citronné", k:830, p:48, i:["200 g saumon","300 g patate douce","beurre citronné","brocoli"], prep:"Tout rôtir au four 25 min."},
+      {n:"Burgers maison double protéine", k:870, p:52, i:["2 boulettes de bœuf maigre 90 g","pain burger","fromage, crudités","patates au four"], prep:"Griller les boulettes, monter les burgers, servir avec patates."},
+      {n:"Curry poulet-coco & riz XL", k:840, p:50, i:["200 g poulet","lait de coco","180 g riz","légumes, épices"], prep:"Mijoter le curry 20 min, servir sur riz."},
+      {n:"Bœuf sauté, nouilles & arachides", k:860, p:48, i:["180 g bœuf","nouilles asiatiques","légumes sautés","sauce arachide"], prep:"Sauter le tout au wok."},
+      {n:"Lasagne maison & salade", k:820, p:45, i:["portion de lasagne bœuf-ricotta","salade verte","vinaigrette","pain"], prep:"Réchauffer / cuire la lasagne, servir avec salade."}
+    ],
+    lun: [
+      {n:"Bol poulet-riz XL & avocat", k:780, p:50, i:["180 g poulet","180 g riz cuit","1 avocat","légumes, sauce"], prep:"Assembler le bol généreux."},
+      {n:"Pâtes bolognaises (restes)", k:750, p:45, i:["1 grosse portion de bolognaise","parmesan","pain"], prep:"Réchauffer."},
+      {n:"2 wraps poulet-fromage", k:760, p:48, i:["160 g poulet","2 tortillas","fromage râpé","laitue, salsa"], prep:"Garnir et rouler les 2 wraps."},
+      {n:"Bol saumon-riz-edamames", k:740, p:45, i:["180 g saumon (conserve ou restes)","riz","edamames","sauce soya-sésame"], prep:"Assembler."},
+      {n:"Burger maison & patates", k:780, p:42, i:["1 boulette 150 g","pain burger, fromage","patates au four"], prep:"Griller la boulette, monter le burger."},
+      {n:"Riz sauté œufs-poulet", k:750, p:44, i:["150 g poulet","2 œufs","riz de la veille","légumes, sauce soya"], prep:"Tout sauter au wok 8 min."},
+      {n:"Sous-marin poulet 12 po + lait", k:770, p:48, i:["sous-marin poulet grillé","300 ml lait"], prep:"L'option resto raisonnable."}
+    ],
+    col: [
+      {n:"Shake gainer maison", k:400, p:32, i:["1 scoop protéine","300 ml lait entier","1 banane","1 c. à soupe beurre d'arachide"], prep:"Mélangeur 30 s."},
+      {n:"Yogourt grec, granola & miel", k:350, p:22, i:["250 g yogourt grec","30 g granola","1 c. à soupe miel"], prep:"Assembler."},
+      {n:"Sandwich beurre d'arachide-confiture + lait", k:380, p:15, i:["2 tranches pain","beurre d'arachide, confiture","250 ml lait"], prep:"Le classique qui fait le travail."},
+      {n:"Noix & fruits séchés", k:350, p:10, i:["50 g mélange noix + fruits séchés"], prep:"Dans le sac, toujours."},
+      {n:"Fromage, craquelins & dinde", k:340, p:20, i:["40 g fromage","craquelins","60 g dinde tranchée"], prep:"Assembler l'assiette."},
+      {n:"Smoothie lait-avoine-fruits", k:360, p:20, i:["250 ml lait","30 g avoine","150 g fruits","½ scoop protéine"], prep:"Mélangeur."},
+      {n:"2 toasts avocat-œuf", k:350, p:16, i:["2 tranches pain","½ avocat","1 œuf"], prep:"Tartiner, œuf au plat dessus."}
+    ]
+  }
+};
+
+/* ─── Programmes d'entraînement : 7 jours (Lundi → Dimanche), conçus façon coach.
+   Chaque séance : échauffement, exercices (séries × reps), repos, et notes de progression. ─── */
+const PROG_INFO = {
+  shred:       {label:"🔥 Shred",            desc:"6 jours/semaine : 3 séances musculation full body lourdes + 3 cardio (HIIT et zone 2). Le but : garder un maximum de muscle pendant une sèche agressive. Progression : garde tes charges, réduis les repos semaine après semaine."},
+  muscu:       {label:"💪 Musculation",       desc:"Split haut/bas sur 4 séances : 2 jours force (charges lourdes, 6-8 reps, repos longs) + 2 jours volume (10-15 reps). Progression : ajoute 2,5 kg ou 1 rep quand tu complètes toutes les séries."},
+  perte:       {label:"⚖️ Perte de poids",    desc:"3 séances full body simples + cardio modéré. Idéal pour débuter ou reprendre : la régularité bat l'intensité. Progression : maîtrise d'abord la technique, puis ajoute des reps."},
+  masse:       {label:"📈 Prise de masse",     desc:"Push / Pull / Legs + 2 jours volume : 5 séances, gros exercices polyarticulaires d'abord, repos 2-3 min sur les lourds. Progression : surcharge progressive obligatoire — note tes charges et bats-les."},
+  graisse:     {label:"🎯 Perte de graisse",   desc:"Circuits métaboliques + HIIT : la musculation en circuit garde la fréquence cardiaque haute pour brûler un maximum tout en stimulant le muscle. Enchaîne les exercices, repos courts (30-45 s)."},
+  cardio:      {label:"❤️ Cardio équipé",      desc:"Un équipement différent chaque jour : tapis roulant, rameur, sac de boxe, elliptique, vélo, trampoline, médecine-ball, haltères. Alterne intensité (HIIT) et endurance (zone 2 : on peut tenir une conversation)."},
+  calisthenie: {label:"🤸 Calisthénie",        desc:"Poids du corps uniquement : pompes, tractions, dips, squats, gainage et skills. Progression : passe aux variantes plus dures (déclinées, archer, pistol) quand tu dépasses les reps cibles."},
+  maison:      {label:"🏠 Maison",             desc:"Zéro salle : poids du corps + haltères ou élastiques si tu en as. Séances de 30-40 min, matériel improvisé (chaise, canapé, escaliers). Aucune excuse logistique."},
+  custom:      {label:"🛠️ Mon programme",     desc:"Ton propre programme : choisis le type de chaque jour et écris tes exercices. Un exercice par ligne, au format « Nom | séries × reps »."}
+};
+const PROGRAMMES = {
+  shred: [
+    {t:"muscu", n:"Full body A — jambes dominant", ex:[["🔥 Échauffement","5 min vélo + mobilité hanches"],["Squat gobelet","4 × 12"],["Développé haltères","4 × 10"],["Rowing haltère","4 × 12"],["Fentes marchées","3 × 20 pas"],["Planche","3 × 45 s"],["💤 Repos entre séries","60–90 s"]]},
+    {t:"cardio", n:"HIIT 20 min", ex:[["Échauffement","5 min facile"],["Intervalles vélo/course/rameur","10 × (30 s fort / 60 s lent)"],["Retour au calme","5 min"]]},
+    {t:"muscu", n:"Full body B — tirage dominant", ex:[["🔥 Échauffement","5 min rameur + épaules élastique"],["Soulevé de terre roumain","4 × 10"],["Développé incliné","4 × 10"],["Tirage vertical","4 × 12"],["Hip thrust","3 × 15"],["Gainage latéral","3 × 30 s/côté"],["💤 Repos entre séries","60–90 s"]]},
+    {t:"cardio", n:"Cardio LISS 40 min", ex:[["Marche rapide / vélo / elliptique","40 min zone 2 (on peut parler)"]]},
+    {t:"muscu", n:"Full body C + abdos", ex:[["🔥 Échauffement","5 min cardio au choix"],["Presse à cuisses","4 × 12"],["Épaulé haltères","3 × 12"],["Rowing machine","4 × 12"],["Crunchs câble","3 × 15"],["Relevés de jambes","3 × 12"],["💤 Repos entre séries","60–90 s"]]},
+    {t:"cardio", n:"HIIT ou sport au choix", ex:[["HIIT 20 min ou sport (soccer, natation, vélo…)","30–45 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche extérieure","45–60 min"],["Étirements / mobilité","15 min"]]}
+  ],
+  perte: [
+    {t:"muscu", n:"Full body A", ex:[["🔥 Échauffement","5 min marche rapide + rotations"],["Squat","3 × 12"],["Développé couché ou pompes","3 × 10"],["Rowing","3 × 12"],["Planche","3 × 40 s"],["💤 Repos entre séries","90 s"]]},
+    {t:"cardio", n:"Marche rapide / vélo", ex:[["Cardio modéré zone 2","35–45 min"]]},
+    {t:"muscu", n:"Full body B", ex:[["🔥 Échauffement","5 min vélo"],["Soulevé de terre roumain","3 × 10"],["Développé épaules","3 × 12"],["Tirage vertical","3 × 12"],["Gainage","3 × 40 s"],["💤 Repos entre séries","90 s"]]},
+    {t:"repos", n:"Repos", ex:[["Marche légère","30 min"]]},
+    {t:"muscu", n:"Full body C", ex:[["🔥 Échauffement","5 min cardio au choix"],["Fentes","3 × 12/jambe"],["Développé incliné","3 × 10"],["Rowing haltère","3 × 12"],["Abdos au choix","3 séries"],["💤 Repos entre séries","90 s"]]},
+    {t:"cardio", n:"Cardio plaisir", ex:[["Vélo, natation, randonnée, danse…","40–60 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche + étirements","30–45 min"]]}
+  ],
+  muscu: [
+    {t:"muscu", n:"Haut du corps — force", ex:[["🔥 Échauffement","5 min rameur + séries légères"],["Développé couché","4 × 6-8 · repos 2-3 min"],["Rowing barre","4 × 6-8 · repos 2-3 min"],["Développé militaire","3 × 8"],["Tirage vertical","3 × 10"],["Curl + extensions triceps","3 × 12 · repos 60 s"]]},
+    {t:"muscu", n:"Bas du corps — force", ex:[["🔥 Échauffement","5 min vélo + squats à vide"],["Squat","4 × 6-8 · repos 2-3 min"],["Soulevé de terre roumain","3 × 8"],["Presse à cuisses","3 × 10"],["Mollets debout","4 × 15"],["Gainage","3 × 45 s"]]},
+    {t:"cardio", n:"Cardio léger + mobilité", ex:[["Vélo ou marche inclinée","25–30 min zone 2"],["Mobilité hanches/épaules","10 min"]]},
+    {t:"muscu", n:"Haut du corps — volume", ex:[["🔥 Échauffement","5 min + épaules élastique"],["Développé incliné haltères","4 × 10"],["Rowing haltère","4 × 10"],["Élévations latérales","4 × 15"],["Tractions ou tirage","3 × max"],["Bras superset","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Bas du corps — volume", ex:[["🔥 Échauffement","5 min vélo"],["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl","3 × 12"],["Extensions quadriceps","3 × 15"],["Abdos","3 séries · repos 60-90 s"]]},
+    {t:"cardio", n:"Cardio au choix", ex:[["Sport, natation, vélo…","30 min"]]},
+    {t:"repos", n:"Repos complet", ex:[["Récupération, sommeil, étirements","—"]]}
+  ],
+  masse: [
+    {t:"muscu", n:"Push — pectoraux/épaules/triceps", ex:[["🔥 Échauffement","5 min + 2 séries légères au 1er exercice"],["Développé couché","4 × 6-8 · repos 2-3 min"],["Développé incliné haltères","4 × 10"],["Développé militaire","3 × 8"],["Élévations latérales","4 × 15"],["Extensions triceps","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Pull — dos/biceps", ex:[["🔥 Échauffement","5 min rameur + tirages légers"],["Soulevé de terre","4 × 5 · repos 3 min"],["Tractions ou tirage vertical","4 × 8"],["Rowing barre","4 × 8"],["Face pull","3 × 15"],["Curl barre","3 × 10 · repos 60-90 s"]]},
+    {t:"muscu", n:"Legs — jambes", ex:[["🔥 Échauffement","5 min vélo + squats à vide"],["Squat","4 × 6-8 · repos 2-3 min"],["Presse à cuisses","4 × 10"],["Soulevé de terre roumain","3 × 10"],["Mollets","4 × 15"],["Abdos lestés","3 × 12"]]},
+    {t:"repos", n:"Repos", ex:[["Récupération + repas complets","—"]]},
+    {t:"muscu", n:"Haut du corps — volume", ex:[["🔥 Échauffement","5 min au choix"],["Développé incliné","4 × 10"],["Rowing haltère","4 × 10"],["Dips","3 × max"],["Élévations latérales","4 × 15"],["Bras superset","3 × 12 · repos 60-90 s"]]},
+    {t:"muscu", n:"Bas du corps — volume", ex:[["🔥 Échauffement","5 min vélo"],["Fentes bulgares","4 × 10/jambe"],["Hip thrust","4 × 12"],["Leg curl + extensions","3 × 12"],["Mollets assis","4 × 15"]]},
+    {t:"cardio", n:"Cardio santé léger", ex:[["Marche ou vélo tranquille","25 min"]]}
+  ],
+  graisse: [
+    {t:"muscu", n:"Circuit haltères full body", ex:[["🔥 Échauffement","5 min corde à sauter"],["Circuit 4 tours · repos 45 s entre tours",""],["1. Goblet squat","× 15"],["2. Développé haltères","× 12"],["3. Rowing haltère","× 12/bras"],["4. Fentes alternées","× 20"],["5. Mountain climbers","× 30 s"]]},
+    {t:"cardio", n:"HIIT tapis roulant ou vélo", ex:[["Échauffement","5 min facile"],["Sprints","8 × (1 min rapide / 1 min marche)"],["Retour au calme","5 min"]]},
+    {t:"muscu", n:"Circuit poids du corps + médecine-ball", ex:[["🔥 Échauffement","jumping jacks 3 min"],["Circuit 4 tours · repos 45 s",""],["1. Squats sautés","× 12"],["2. Pompes","× 12"],["3. Slams médecine-ball","× 15"],["4. Russian twists (ballon)","× 20"],["5. Burpees","× 10"]]},
+    {t:"cardio", n:"LISS + gainage", ex:[["Elliptique / marche inclinée","35 min zone 2"],["Planche + gainage latéral","3 × 45 s + 3 × 30 s/côté"]]},
+    {t:"muscu", n:"Circuit kettlebell / haltère", ex:[["🔥 Échauffement","5 min rameur"],["Circuit 5 tours · repos 60 s",""],["1. Swings kettlebell","× 15"],["2. Goblet squat","× 12"],["3. Poussée d'épaules","× 10"],["4. Farmer walk","30 m"],["5. Corde à sauter","45 s"]]},
+    {t:"cardio", n:"Sac de boxe + corde", ex:[["Échauffement","corde à sauter 3 min"],["Sac de boxe","6 rounds de 2 min / repos 1 min"],["Finisher corde à sauter","3 × 1 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche extérieure","45–60 min"],["Étirements","15 min"]]}
+  ],
+  cardio: [
+    {t:"cardio", n:"Tapis roulant — intervalles", ex:[["Échauffement","5 min marche rapide"],["Intervalles","8 × (1 min course rapide / 1 min marche)"],["Option inclinaison","5 min marche pente 8-10 %"],["Retour au calme","5 min"]]},
+    {t:"cardio", n:"Rameur — pyramide", ex:[["Échauffement","5 min cadence légère"],["Pyramide","250 m → 500 m → 750 m → 500 m → 250 m"],["Repos entre paliers","1 min"],["Technique","jambes → tronc → bras, jamais l'inverse"]]},
+    {t:"cardio", n:"Sac de boxe + corde à sauter", ex:[["Échauffement","corde à sauter 3 min + épaules"],["Sac de boxe","6 rounds de 3 min / repos 1 min"],["Combos","jab-cross, crochets, esquives — reste léger sur les appuis"],["Finisher","corde à sauter 3 × 2 min"]]},
+    {t:"cardio", n:"Elliptique + ballon suisse", ex:[["Elliptique","35 min zone 2 (conversation possible)"],["Gainage sur ballon suisse","planche 3 × 45 s"],["Crunchs sur ballon","3 × 15"]]},
+    {t:"cardio", n:"Vélo — sprints", ex:[["Échauffement","5 min souple"],["Sprints","10 × (30 s à fond / 90 s souple)"],["Retour au calme","5 min"]]},
+    {t:"cardio", n:"Trampoline + médecine-ball + haltères", ex:[["Trampoline","15 min (course, jumping jacks, twists)"],["Slams médecine-ball","3 × 15"],["Wall balls","3 × 12"],["Complexe haltères légers","3 × (8 squats + 8 poussées + 8 rowings)"]]},
+    {t:"repos", n:"Récupération", ex:[["Marche longue","60 min"],["Ou repos complet + étirements","20 min"]]}
+  ],
+  calisthenie: [
+    {t:"muscu", n:"Push — pousser", ex:[["🔥 Échauffement","rotations épaules + 2 × 5 pompes lentes"],["Pompes","4 × max (garde 2 reps en réserve)"],["Pompes déclinées (pieds surélevés)","3 × 10"],["Dips (banc ou barres)","3 × 8"],["Pompes piquées (pike)","3 × 8"],["Planche","3 × 45 s"],["💤 Repos","90 s"]]},
+    {t:"muscu", n:"Pull — tirer", ex:[["🔥 Échauffement","suspension barre 2 × 20 s"],["Tractions (ou australiennes)","4 × max"],["Chin-ups (supination)","3 × max"],["Rowing australien","3 × 12"],["Hollow hold","3 × 30 s"],["💤 Repos","90 s–2 min"]]},
+    {t:"muscu", n:"Legs — jambes", ex:[["🔥 Échauffement","squats à vide 2 × 15"],["Squats sautés","4 × 12"],["Fentes","3 × 12/jambe"],["Pistols assistés (au cadre/TRX)","3 × 5/jambe"],["Mollets sur marche","4 × 20"],["Pont fessier","3 × 15"]]},
+    {t:"repos", n:"Repos ou mobilité", ex:[["Mobilité épaules/hanches","20 min"]]},
+    {t:"muscu", n:"Full body", ex:[["🔥 Échauffement","jumping jacks 3 min"],["Burpees","3 × 12"],["Pompes archer (ou normales)","3 × 8"],["Tractions","3 × max"],["Squats bulgares","3 × 10/jambe"],["L-sit (ou genoux relevés)","3 × max"]]},
+    {t:"muscu", n:"Core + skills", ex:[["Handstand contre le mur","5 × 30 s"],["Planche latérale","3 × 40 s/côté"],["Relevés de jambes suspendu","3 × 12"],["Superman","3 × 15"],["Travail libre (crow, tuck planche…)","10 min"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche","45 min"],["Étirements complets","15 min"]]}
+  ],
+  maison: [
+    {t:"muscu", n:"Full body A (maison)", ex:[["🔥 Échauffement","montées de genoux 2 min + rotations"],["Squats (goblet si haltère)","4 × 15"],["Pompes (sur genoux si besoin)","4 × 10"],["Rowing haltère / élastique / sac à dos chargé","4 × 12"],["Planche","3 × 40 s"],["💤 Repos","60-90 s"]]},
+    {t:"cardio", n:"Cardio maison", ex:[["Circuit 20 min : enchaîne sans pause longue",""],["Jumping jacks","45 s"],["Montées d'escaliers (ou genoux)","1 min"],["Corde à sauter (ou imitation)","45 s"],["Repos","30 s — répète 8 tours"]]},
+    {t:"muscu", n:"Full body B (maison)", ex:[["🔥 Échauffement","2 min marche rapide sur place"],["Fentes","4 × 12/jambe"],["Développé haltères (ou pompes surélevées)","3 × 12"],["Soulevé roumain haltères (ou bouteilles)","3 × 12"],["Gainage latéral","3 × 30 s/côté"]]},
+    {t:"repos", n:"Repos", ex:[["Marche extérieure","30 min"]]},
+    {t:"muscu", n:"Full body C (maison)", ex:[["🔥 Échauffement","2 min jumping jacks"],["Hip thrust (dos sur canapé)","4 × 15"],["Pompes prise serrée","3 × 10"],["Curl + extension (haltères/élastique)","3 × 12"],["Mountain climbers","3 × 30 s"]]},
+    {t:"cardio", n:"HIIT sans matériel + abdos", ex:[["HIIT 20 min","8 × (30 s effort / 60 s repos) : burpees, squats sautés, climbers"],["Crunchs","3 × 15"],["Relevés de jambes","3 × 12"],["Planche","3 × 40 s"]]},
+    {t:"repos", n:"Repos actif", ex:[["Marche + étirements","30–45 min"]]}
+  ]
+};
+/* Programme personnalisé : gabarit de départ (modifiable dans l'onglet Sport) */
+const CUSTOM_DEFAUT = JOURS_LMD.map(()=>({t:"repos", n:"À définir", ex:[]}));
+
+/* ─── Raisons d'écart et corrections associées ─── */
+const RAISONS = {
+  "Écarts alimentaires / grignotage": [
+    "Prépare tes 2 repas à l'avance (meal prep du dimanche) pour éviter les décisions de dernière minute.",
+    "Garde des collations protéinées à portée de main (yogourt grec, œufs cuits) plutôt que du sucré."
+  ],
+  "Restaurant / alcool": [
+    "Au restaurant : protéine + légumes, sauce à part, et saute le dessert ou partage-le.",
+    "Limite l'alcool à 1-2 consommations par semaine — c'est ~150 kcal « invisibles » par verre."
+  ],
+  "Portions trop grosses": [
+    "Pèse tes féculents (riz, pâtes) pendant 1 semaine pour recalibrer ton œil.",
+    "Sers-toi dans une assiette plus petite et attends 10 min avant de te resservir."
+  ],
+  "Manque de sommeil": [
+    "Vise 7-8 h : le manque de sommeil augmente la faim (ghréline) et fait stagner le poids.",
+    "Couche-toi 30 min plus tôt cette semaine, écrans éteints."
+  ],
+  "Stress": [
+    "Le cortisol favorise la rétention d'eau et le grignotage : ajoute 10 min de marche ou de respiration par jour.",
+    "Ne compense pas le stress par la nourriture — remplace par une activité (marche, douche, appel à un ami)."
+  ],
+  "Séances manquées": [
+    "Reprends avec la prochaine séance prévue — ne tente pas de « rattraper » en doublant.",
+    "Si le temps manque : version courte de 20 min vaut 100 × mieux que rien."
+  ],
+  "Peu de pas / journée sédentaire": [
+    "Ajoute 2 marches de 15 min (matin/soir) — c'est ~2 500 pas et 100-150 kcal.",
+    "Prends les escaliers et descends un arrêt plus tôt."
+  ],
+  "Rétention d'eau / beaucoup de sel": [
+    "Un repas salé ou riche en glucides retient 1-2 kg d'eau : c'est temporaire, ne panique pas.",
+    "Bois PLUS d'eau (pas moins) et réduis les aliments transformés 2-3 jours."
+  ],
+  "Période menstruelle": [
+    "Les fluctuations hormonales peuvent masquer la perte de gras pendant plusieurs jours : compare d'un cycle à l'autre.",
+    "Continue le plan normalement — le chiffre redescendra."
+  ],
+  "Plateau (rien ne change)": [
+    "Après 2-3 semaines de plateau réel : réduis de 100-150 kcal OU ajoute 2 000 pas/jour.",
+    "Vérifie les huiles, sauces et collations « oubliées » — elles comptent."
+  ],
+  "Autre / je ne sais pas": [
+    "Note tout ce que tu manges pendant 3 jours (photos ou app) — la cause apparaît presque toujours.",
+    "Pèse-toi le matin à jeun, après la toilette, même jour chaque semaine pour comparer du pareil au pareil."
+  ]
+};
+
+/* ─── Modifications recommandées quand le poids stagne, selon le programme d'entraînement ─── */
+const RECO_TRAIN = {
+  shred:      ["Ajoute 1 séance HIIT de 20 min, ou allonge le LISS de 10 min.","Réduis les repos entre séries à 45-60 s pour augmenter la dépense."],
+  perte:      ["Ajoute une 4e séance dans la semaine (une marche rapide de 45 min compte).","Passe tes cardios de 35 à 45 min."],
+  muscu:      ["Ajoute 10 min de cardio zone 2 après chaque séance du haut du corps.","Vérifie ta surcharge progressive : +2,5 kg ou +1 rep chaque semaine, sinon rien ne change."],
+  masse:      ["Garde le programme tel quel — si le poids ne monte pas, le problème est dans l'assiette, pas sous la barre.","Dors 7-8 h : c'est pendant le sommeil que le muscle se construit."],
+  graisse:    ["Passe de 4 à 5 tours sur les circuits, ou réduis les repos à 30 s.","Remplace un LISS par un HIIT cette semaine."],
+  cardio:     ["Allonge 2 séances de 10 min ou ajoute un intervalle de plus à chaque HIIT.","Ajoute 2 mini-séances de renfo (20 min) pour protéger ta masse musculaire."],
+  calisthenie:["Ajoute 1 série par exercice, ou passe aux variantes plus dures (déclinées, archer, lestées).","Ajoute 15 min de corde à sauter après 2 séances par semaine."],
+  maison:     ["Ajoute un tour de plus à tes circuits, ou réduis les pauses à 30 s.","Ajoute une marche rapide quotidienne de 20 min."],
+  custom:     ["Augmente le volume : +1 série par exercice ou +1 séance par semaine.","Ajoute 15-20 min de cardio en fin de séance."]
+};
+const RECO_NUTRI = {
+  perteDir: ["🍽️ Réduis de 150 kcal/jour : commence par les extras, sauces et boissons.","🍽️ Monte les protéines à chaque repas — elles coupent la faim et protègent le muscle.","🍽️ Essaie la structure « déjeuner + souper (16/8) » pendant 2-3 semaines si les grignotages dérapent."],
+  gainDir:  ["🍽️ Ajoute 200-300 kcal/jour : un shake gainer ou une collation de plus.","🍽️ Ajoute une collation avant le coucher (yogourt grec + granola + miel).","🍽️ Bois tes calories si manger plus est difficile : smoothie lait-avoine-fruits-protéine."]
+};
+
+/* ─── Routine quotidienne : horaires par défaut, personnalisables ─── */
+const ROUTINE_DEFAUT = { dej:"07:30", lun:"12:00", col:"15:30", din:"18:30", sport:"17:00", pesee:"07:00" };
+
+/* ════════════════════════════════ ÉTAT ════════════════════════════════ */
+let S = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { profil:null, poids:[], jours:{}, seances:{} };
+}
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
+
+const $ = id => document.getElementById(id);
+const todayKey = () => new Date().toISOString().slice(0,10);
+function jourData(k){
+  if(!S.jours[k]) S.jours[k] = {eau:0, pas:0};
+  const j = S.jours[k];
+  if(!j.mange) j.mange = {};
+  if(!j.extra) j.extra = [];
+  if(!j.rout) j.rout = {};
+  return j;
+}
+function routineTimes(){
+  if(!S.routine) S.routine = {times:{...ROUTINE_DEFAUT}, custom:[]};
+  if(!S.routine.times) S.routine.times = {...ROUTINE_DEFAUT};
+  if(!S.routine.custom) S.routine.custom = [];
+  return S.routine;
+}
+/* Clé de séance pour une date quelconque */
+function seanceKeyFor(date){
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - ((date.getDay()+6)%7));
+  return monday.toISOString().slice(0,10) + "#" + ((date.getDay()+6)%7);
+}
+const fmt1 = n => (Math.round(n*10)/10).toLocaleString("fr-CA");
+
+/* ════════════════════════════════ CALCULS ════════════════════════════════ */
+function calc(){
+  const p = S.profil;
+  if(!p) return null;
+  const g = GOALS[p.objectif];
+  const poids = S.poids.length ? S.poids[S.poids.length-1].kg : p.poids;
+  // Mifflin-St Jeor
+  const bmr = 10*poids + 6.25*p.taille - 5*p.age + (p.sexe==="h" ? 5 : -161);
+  const tdee = Math.round(bmr * p.activite);
+  const diff = poids - p.cible;
+
+  // Rythme (kg/semaine) : imposé par la période choisie, sinon celui de l'objectif
+  let rate = g.rate, clamped = false, periodeSem = null;
+  const per = p.periode && p.periode !== "auto" ? +p.periode : null;
+  if(per && Math.abs(diff) > 0.2){
+    let r = -diff / per; // négatif = perte
+    if(r < 0){ const rc = Math.min(-0.1, Math.max(r, -1.0)); clamped = rc !== r; r = rc; } // perte max 1 kg/sem
+    else     { const rc = Math.max(0.1, Math.min(r, 0.4));  clamped = rc !== r; r = rc; } // gain max 0,4 kg/sem
+    rate = r;
+    periodeSem = per;
+  }
+
+  // Calories : dérivées du rythme si période choisie (7 700 kcal ≈ 1 kg), sinon % de l'objectif
+  let cal = periodeSem ? Math.round(tdee + rate*7700/7) : Math.round(tdee * (1 + g.pct));
+  cal = Math.max(cal, p.sexe==="h" ? 1500 : 1200); // planchers de sécurité
+
+  const [pp,pg,pl] = MACROS[p.objectif];
+  const prot = Math.round(cal*pp/4), gluc = Math.round(cal*pg/4), lip = Math.round(cal*pl/9);
+  const eauL = Math.round(poids*35/100)/10; // 35 ml/kg
+
+  let etaSem = null;
+  if(rate < 0 && diff > 0) etaSem = Math.ceil(diff / -rate);
+  if(rate > 0 && diff < 0) etaSem = Math.ceil(-diff / rate);
+
+  // Structure de repas : choix explicite ou recommandation selon l'objectif
+  const structKey = (p.repas && p.repas !== "auto") ? p.repas : MEALS_AUTO[p.objectif];
+  const struct = MEAL_STRUCTS[structKey] || MEAL_STRUCTS["2"];
+  const wTotal = struct.meals.reduce((s,m)=>s+MEAL_W[m], 0);
+  const split = {};
+  struct.meals.forEach(m => split[m] = MEAL_W[m]/wTotal);
+
+  // % de gras : dernière mesure enregistrée, sinon profil, sinon estimation (Deurenberg)
+  let gras = null, grasEst = false;
+  for(let i=S.poids.length-1; i>=0; i--){ if(S.poids[i].gras){ gras = S.poids[i].gras; break; } }
+  if(gras === null && p.gras) gras = p.gras;
+  if(gras === null){
+    const bmi = poids / Math.pow(p.taille/100, 2);
+    gras = Math.round((1.2*bmi + 0.23*p.age - 10.8*(p.sexe==="h"?1:0) - 5.4)*10)/10;
+    grasEst = true;
+  }
+  const grasCibleAuto = !(p.grasCible > 0);
+  const grasCible = grasCibleAuto ? GRAS_RECO[p.sexe][p.objectif] : p.grasCible;
+
+  return {g, poids, tdee, cal, prot, gluc, lip, eauL, diff, etaSem,
+          rate, clamped, periodeSem, structKey, struct, split,
+          repasAuto: !(p.repas && p.repas !== "auto"),
+          gras, grasEst, grasCible, grasCibleAuto};
+}
+
+/* ════════════════════════════════ NAVIGATION ════════════════════════════════ */
+function show(view){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("view-"+view).classList.add("active");
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.view===view));
+  if(view==="dash") renderDash();
+  if(view==="repas") renderRepas();
+  if(view==="training") renderTraining();
+  if(view==="suivi") renderSuivi();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", ()=>{
+  if(!S.profil && b.dataset.view!=="profil"){ alert("Complète d'abord ton profil 👤"); return; }
+  show(b.dataset.view);
+}));
+
+/* ════════════════════════════════ PROFIL ════════════════════════════════ */
+$("profilForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  S.profil = {
+    sexe: $("f-sexe").value,
+    age: +$("f-age").value,
+    poids: +$("f-poids").value,
+    taille: +$("f-taille").value,
+    activite: +$("f-activite").value,
+    objectif: $("f-objectif").value,
+    cible: +$("f-cible").value,
+    gras: +$("f-gras").value || null,
+    grasCible: +$("f-gras-cible").value || null,
+    repas: $("f-repas").value,
+    periode: $("f-periode").value === "perso" ? (+$("f-periode-sem").value || "auto") : $("f-periode").value,
+    programme: $("f-programme").value,
+    debut: S.profil && S.profil.debut ? S.profil.debut : todayKey()
+  };
+  if(!S.poids.length) S.poids.push({d:todayKey(), kg:S.profil.poids});
+  save();
+  renderHeader();
+  show("dash");
+});
+$("resetBtn").addEventListener("click", ()=>{
+  if(confirm("Effacer TOUTES les données (profil, pesées, historique) ?")){
+    localStorage.removeItem(STORE_KEY);
+    S = load();
+    location.reload();
+  }
+});
+/* ─── Export / import des données ─── */
+$("exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(S, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fitcoach-sauvegarde-" + todayKey() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("importBtn").addEventListener("click", ()=> $("importFile").click());
+$("importFile").addEventListener("change", e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const data = JSON.parse(r.result);
+      if(!data || typeof data !== "object" || !("profil" in data) || !Array.isArray(data.poids))
+        throw new Error("format");
+      if(!confirm("Remplacer les données actuelles par cette sauvegarde ?")) return;
+      S = {profil:data.profil, poids:data.poids, jours:data.jours||{}, seances:data.seances||{},
+           custom:data.custom||null, routine:data.routine||null, recettes:data.recettes||[]};
+      save();
+      location.reload();
+    }catch(err){ alert("Fichier de sauvegarde invalide."); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+});
+function fillProfilForm(){
+  const p = S.profil; if(!p) return;
+  $("f-sexe").value=p.sexe; $("f-age").value=p.age; $("f-poids").value=p.poids;
+  $("f-taille").value=p.taille; $("f-activite").value=p.activite;
+  $("f-objectif").value=p.objectif; $("f-cible").value=p.cible;
+  if(p.gras) $("f-gras").value = p.gras;
+  if(p.grasCible) $("f-gras-cible").value = p.grasCible;
+  $("f-repas").value = p.repas || "auto";
+  const per = p.periode || "auto";
+  if(per === "auto" || ["13","26","52"].includes(String(per))){ $("f-periode").value = String(per); }
+  else { $("f-periode").value = "perso"; $("f-periode-sem").value = per; $("f-periode-sem").hidden = false; }
+  $("f-programme").value = p.programme || "auto";
+  $("dangerZone").hidden = false;
+}
+$("f-periode").addEventListener("change", ()=>{
+  $("f-periode-sem").hidden = $("f-periode").value !== "perso";
+});
+/* Programme d'entraînement actif : choix explicite, sinon celui de l'objectif nutritionnel */
+function progKey(){
+  const p = S.profil;
+  const k = (p && p.programme) || "auto";
+  return k === "auto" ? p.objectif : k;
+}
+function progSessions(){
+  const k = progKey();
+  if(k === "custom") return S.custom || CUSTOM_DEFAUT;
+  return PROGRAMMES[k] || PROGRAMMES[S.profil.objectif];
+}
+function renderHeader(){
+  $("headerGoal").textContent = S.profil ? GOALS[S.profil.objectif].label : "Bienvenue 👋";
+}
+
+/* ════════════════════════════════ DASHBOARD ════════════════════════════════ */
+function renderDash(){
+  const c = calc(); if(!c) return;
+  $("d-cal").textContent = c.cal.toLocaleString("fr-CA");
+  $("d-tdee").textContent = c.tdee.toLocaleString("fr-CA");
+  const delta = c.cal - c.tdee;
+  $("d-deficit").textContent = (delta>0?"+":"") + delta.toLocaleString("fr-CA");
+  $("d-deficit-l").textContent = delta < 0 ? "Déficit / jour" : delta > 0 ? "Surplus / jour" : "Équilibre";
+
+  // macros
+  const total = c.prot*4 + c.gluc*4 + c.lip*9;
+  const seg = [[c.prot*4,"#34d399","Protéines "+c.prot+" g"],[c.gluc*4,"#0ea5e9","Glucides "+c.gluc+" g"],[c.lip*9,"#fbbf24","Lipides "+c.lip+" g"]];
+  $("macroBar").innerHTML = seg.map(s=>`<div style="width:${(s[0]/total*100).toFixed(1)}%;background:${s[1]}"></div>`).join("");
+  $("macroLegend").innerHTML = seg.map(s=>`<span><span class="dot" style="background:${s[1]}"></span>${s[2]}</span>`).join("");
+
+  // progression
+  const p = S.profil;
+  $("d-cible-titre").textContent = fmt1(p.cible)+" kg";
+  const start = S.poids.length ? S.poids[0].kg : p.poids;
+  const range = Math.abs(start - p.cible);
+  const done = Math.abs(start - c.poids);
+  const pct = range > 0 ? Math.min(100, Math.max(0, done/range*100)) : 100;
+  $("d-pbar").style.width = pct.toFixed(0)+"%";
+  const reste = Math.abs(c.poids - p.cible);
+  $("d-prog-txt").innerHTML = `Poids actuel : <b style="color:var(--txt)">${fmt1(c.poids)} kg</b> — il reste <b style="color:var(--accent)">${fmt1(reste)} kg</b> (${pct.toFixed(0)} % du chemin fait).`;
+  if(c.etaSem){
+    const eta = new Date(); eta.setDate(eta.getDate() + c.etaSem*7);
+    $("d-eta").textContent = `Au rythme du plan (${fmt1(Math.abs(c.rate))} kg/sem.), objectif atteint vers le ${eta.toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"})} (~${c.etaSem} semaines).`;
+  } else if(c.rate === 0){
+    $("d-eta").textContent = "Mode recomposition : ton poids reste stable pendant que le muscle remplace le gras. Suis plutôt tes performances et tes mensurations.";
+  } else {
+    $("d-eta").textContent = Math.abs(c.diff) < 0.5 ? "🎉 Objectif atteint ! Passe en mode maintien ou fixe un nouveau but." :
+      "Ton objectif de poids va dans le sens opposé de ton mode actuel — ajuste l'objectif dans Profil.";
+  }
+
+  // plan complet
+  const progK = progKey();
+  const perTxt = c.periodeSem
+    ? ({13:"3 mois",26:"6 mois",52:"1 an"}[c.periodeSem] || c.periodeSem+" semaines")
+    : "au rythme recommandé";
+  const delta2 = c.cal - c.tdee;
+  $("d-plan").innerHTML = `
+    <div class="entry"><span class="muted">🎯 Objectif</span><b>${c.g.label} → ${fmt1(p.cible)} kg</b></div>
+    <div class="entry"><span class="muted">⏱️ Période</span><b>${perTxt}${c.clamped ? " ⚠️" : ""}</b></div>
+    <div class="entry"><span class="muted">📉 Rythme visé</span><b>${c.rate>0?"+":""}${fmt1(c.rate)} kg/sem. (${delta2>0?"+":""}${delta2} kcal/j)</b></div>
+    <div class="entry"><span class="muted">🧈 % de gras</span><b>${fmt1(c.gras)} %${c.grasEst?" (estimé)":""} → ${fmt1(c.grasCible)} %${c.grasCibleAuto?" 🤖":""}</b></div>
+    <div class="entry"><span class="muted">🍽️ Alimentation</span><b>${c.struct.label}${c.repasAuto ? " 🤖" : ""}</b></div>
+    <div class="entry"><span class="muted">🏋️ Entraînement</span><b>${(PROG_INFO[progK]||PROG_INFO[p.objectif]).label}${(!p.programme || p.programme==="auto") ? " 🤖" : ""}</b></div>
+    ${c.clamped ? `<p class="muted small" style="margin-top:8px;">⚠️ La période demandée exigeait un rythme trop agressif : je l'ai plafonné à un niveau sain (max 1 kg/sem. en perte, 0,4 kg/sem. en prise). L'échéance réelle est celle affichée plus haut.</p>` : ""}
+    ${(c.repasAuto || !p.programme || p.programme==="auto") ? `<p class="muted small" style="margin-top:8px;">🤖 = recommandation de l'app selon ton but — modifiable dans Profil ou dans l'onglet Sport.</p>` : ""}`;
+
+  // eau / pas
+  const j = jourData(todayKey());
+  $("d-eau").textContent = fmt1(j.eau/1000);
+  $("d-eau-cible").textContent = fmt1(c.eauL);
+  $("d-eau-verres").textContent = `${Math.round(j.eau/250)} verre(s) de 250 ml`;
+  $("d-eau-bar").style.width = Math.min(100, j.eau/(c.eauL*1000)*100)+"%";
+  $("d-pas").textContent = j.pas.toLocaleString("fr-CA");
+  $("d-pas-cible").textContent = c.g.pas.toLocaleString("fr-CA");
+  $("d-pas-bar").style.width = Math.min(100, j.pas/c.g.pas*100)+"%";
+
+  // bannière pesée du lundi
+  const nowD = new Date();
+  const mondayD = new Date(nowD); mondayD.setDate(nowD.getDate()-((nowD.getDay()+6)%7));
+  const mondayK = mondayD.toISOString().slice(0,10);
+  const weighThisWeek = S.poids.some(e=>e.d >= mondayK);
+  if(nowD.getDay()===1 && !S.poids.some(e=>e.d===todayKey())){
+    $("d-banner").innerHTML = `<div class="banner-lundi">⚖️ <b>C'est lundi !</b> Pèse-toi ce matin à jeun (poids + % de gras si ta balance l'affiche) et enregistre le tout dans l'onglet Suivi — c'est ce qui pilote ton plan.</div>`;
+  } else if(!weighThisWeek && S.poids.length){
+    $("d-banner").innerHTML = `<div class="banner-lundi" style="border-color:rgba(251,191,36,.5); background:rgba(251,191,36,.08);">⚠️ <b>Pesée du lundi manquée.</b> Pèse-toi demain matin à jeun pour garder ton suivi fiable.</div>`;
+  } else {
+    $("d-banner").innerHTML = "";
+  }
+
+  // routine du jour
+  renderRoutine(c);
+
+  // repas du jour
+  const dow = (new Date().getDay()+6)%7; // 0 = lundi
+  $("d-repas").innerHTML = mealHTML(dow, c, true);
+
+  // journal calories
+  renderJournal(c);
+
+  // séance du jour
+  const seance = progSessions()[dow];
+  $("d-seance").innerHTML = seanceHTML(seance, dow, true);
+  bindSeanceChecks();
+}
+/* ════════════════════════════════ ROUTINE ════════════════════════════════ */
+const toMin = h => { const [a,b] = String(h).split(":").map(Number); return (a||0)*60 + (b||0); };
+function renderRoutine(c){
+  const r = routineTimes();
+  const j = jourData(todayKey());
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const dow = (now.getDay()+6)%7;
+  const items = [];
+
+  // pesée hebdomadaire du lundi matin
+  if(now.getDay() === 1){
+    items.push({h:r.times.pesee||"07:00", icon:"⚖️", label:"Pesée hebdomadaire (à jeun)",
+      sub:"Poids + % de gras — enregistre dans Suivi", done:S.poids.some(e=>e.d===todayKey()), auto:true});
+  }
+  // repas du plan
+  mealsFor(dow, c).forEach(m=>{
+    items.push({h:r.times[m.id]||ROUTINE_DEFAUT[m.id]||"12:00", icon:m.label.split(" ")[0],
+      label:`${m.label.replace(/^\S+\s/,"")} — ${m.rec.n}`, sub:`${m.kcal} kcal`,
+      done:!!j.mange[m.id], act:["meal", m.id]});
+  });
+  // eau : 3 jalons dans la journée
+  const goal = c.eauL*1000;
+  [["10:00",1/3],["15:00",2/3],["20:00",1]].forEach(([h,f])=>{
+    items.push({h, icon:"💧", label:`Eau : ${fmt1(goal*f/1000)} L bus au total`,
+      sub:"Se coche avec le compteur d'eau", done:j.eau >= goal*f - 1, auto:true});
+  });
+  // entraînement du jour
+  const s = progSessions()[dow];
+  if(s.t !== "repos"){
+    items.push({h:r.times.sport||"17:00", icon:"🏋️", label:`Entraînement — ${s.n}`,
+      sub:s.t==="muscu"?"Musculation":"Cardio", done:!!S.seances[seanceKey(dow)], act:["sport", seanceKey(dow)]});
+  }
+  // éléments personnalisés
+  r.custom.forEach(cs=>{
+    items.push({h:cs.h||"20:00", icon:"📌", label:cs.label, sub:"Personnalisé",
+      done:!!j.rout[cs.label], act:["rout", cs.label]});
+  });
+
+  items.sort((a,b)=>toMin(a.h)-toMin(b.h));
+  $("routineList").innerHTML = items.map((it,i)=>`
+    <div class="rt-item ${it.done?"done":""} ${!it.done && nowMin>toMin(it.h) ? "late":""} ${it.act?"clickable":""}"
+         ${it.act?`data-ract="${it.act[0]}" data-rid="${String(it.act[1]).replace(/"/g,"&quot;")}"`:""}>
+      <span class="rt-time">${it.h}</span>
+      <span class="rt-label">${it.icon} ${it.label}<span class="sub">${it.sub||""}</span></span>
+      <span class="rt-check">${it.done?"✅":(nowMin>toMin(it.h)?"⏰":"◻️")}</span>
+    </div>`).join("");
+  $("routineList").querySelectorAll("[data-ract]").forEach(el=>el.addEventListener("click", ()=>{
+    const t = el.dataset.ract, id = el.dataset.rid;
+    if(t==="meal") j.mange[id] = !j.mange[id];
+    if(t==="sport"){ if(S.seances[id]) delete S.seances[id]; else S.seances[id] = todayKey(); }
+    if(t==="rout") j.rout[id] = !j.rout[id];
+    save(); renderDash();
+  }));
+}
+/* ─── Éditeur de routine ─── */
+$("routineEditBtn").addEventListener("click", ()=>{
+  const ed = $("routineEditor");
+  ed.hidden = !ed.hidden;
+  if(ed.hidden){ ed.innerHTML=""; return; }
+  const c = calc(); if(!c) return;
+  const r = routineTimes();
+  const rows = [];
+  rows.push(["pesee","⚖️ Pesée du lundi", r.times.pesee||"07:00"]);
+  c.struct.meals.forEach(id=> rows.push([id, MEAL_LABELS[id], r.times[id]||ROUTINE_DEFAUT[id]]));
+  rows.push(["sport","🏋️ Entraînement", r.times.sport||"17:00"]);
+  ed.innerHTML = `
+    <p class="muted small">Ajuste les heures de ta routine. Les jalons d'eau se répartissent automatiquement sur la journée.</p>
+    ${rows.map(([k,l,v])=>`
+      <div class="row2" style="margin-top:8px; align-items:center;">
+        <span class="muted" style="font-size:.85rem;">${l}</span>
+        <input type="time" data-rt="${k}" value="${v}">
+      </div>`).join("")}
+    <h3 style="margin-top:14px;">📌 Mes éléments personnalisés</h3>
+    <div id="rtCustomRows">
+      ${r.custom.map((cs,i)=>`
+        <div class="row2" style="margin-top:8px;">
+          <input type="time" data-rch="${i}" value="${cs.h}">
+          <div style="display:flex; gap:6px;">
+            <input type="text" data-rcl="${i}" value="${cs.label.replace(/"/g,"&quot;")}">
+            <button class="del" data-rcd="${i}" type="button">✕</button>
+          </div>
+        </div>`).join("")}
+    </div>
+    <button class="btn secondary" id="rtAddCustom" type="button" style="margin-top:8px;">➕ Ajouter (ex. : étirements, méditation, marche…)</button>
+    <button class="btn" id="rtSave" type="button">💾 Enregistrer ma routine</button>`;
+  $("rtAddCustom").addEventListener("click", ()=>{
+    saveRoutineEditor(false);
+    routineTimes().custom.push({h:"20:00", label:"Nouvel élément"});
+    save();
+    ed.hidden = true; $("routineEditBtn").click();
+  });
+  ed.querySelectorAll("[data-rcd]").forEach(b=>b.addEventListener("click", ()=>{
+    saveRoutineEditor(false);
+    routineTimes().custom.splice(+b.dataset.rcd,1);
+    save();
+    ed.hidden = true; $("routineEditBtn").click();
+  }));
+  $("rtSave").addEventListener("click", ()=>{
+    saveRoutineEditor(true);
+  });
+});
+function saveRoutineEditor(close){
+  const ed = $("routineEditor");
+  const r = routineTimes();
+  ed.querySelectorAll("[data-rt]").forEach(inp=>{ if(inp.value) r.times[inp.dataset.rt] = inp.value; });
+  const customs = [];
+  ed.querySelectorAll("[data-rch]").forEach(inp=>{
+    const i = inp.dataset.rch;
+    const lbl = ed.querySelector(`[data-rcl="${i}"]`);
+    if(lbl && lbl.value.trim()) customs.push({h:inp.value||"20:00", label:lbl.value.trim()});
+  });
+  r.custom = customs;
+  save();
+  if(close){ ed.hidden = true; ed.innerHTML=""; renderDash(); }
+}
+
+/* Extras (ajout rapide) */
+$("extraAdd").addEventListener("click", ()=>{
+  const k = +$("extraKcal").value;
+  if(!k || k<=0 || k>4000){ alert("Entre un nombre de calories valide."); return; }
+  jourData(todayKey()).extra.push({n:$("extraNom").value.trim(), k:Math.round(k)});
+  $("extraNom").value=""; $("extraKcal").value="";
+  save(); renderDash();
+});
+
+/* ════════════════════════════════ REPAS ════════════════════════════════ */
+/* Repas du jour selon la structure choisie : liste de {id, label, rec, kcal, prot, f} */
+function mealsFor(dow, c){
+  const set = RECETTES[c.g.mealSet];
+  return c.struct.meals.map(id => {
+    const rec = set[id][dow % 7];
+    const kcal = Math.round(c.cal * c.split[id]);
+    const f = kcal / rec.k;
+    return {id, label: MEAL_LABELS[id], rec, kcal, prot: Math.round(rec.p*f), f};
+  });
+}
+function mealHTML(dow, c, isToday){
+  const j = isToday ? jourData(todayKey()) : null;
+  return mealsFor(dow, c).map(m => `
+    <div class="meal">
+      <div class="mhead">
+        <div><div class="mtype">${m.label}</div><h4>${m.rec.n}</h4></div>
+        <div class="kcal">${m.kcal} kcal · ${m.prot} g prot.</div>
+      </div>
+      <ul>${m.rec.i.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <div class="prep">${m.rec.prep}</div>
+      <div class="muted small" style="margin-top:6px;">Portion : ×${m.f.toFixed(1)} de la recette de base (${m.rec.k} kcal).</div>
+      ${isToday ? `<button type="button" class="eat-btn ${j.mange[m.id]?"eaten":""}" data-meal="${m.id}">${j.mange[m.id]?"✔ Mangé":"Marquer comme mangé"}</button>` : ""}
+    </div>`).join("");
+}
+/* Calories consommées aujourd'hui (repas cochés + extras) */
+function consomme(c){
+  const j = jourData(todayKey());
+  const dow = (new Date().getDay()+6)%7;
+  let kcal = 0, prot = 0;
+  mealsFor(dow, c).forEach(m => {
+    if(j.mange[m.id]){ kcal += m.kcal; prot += m.prot; }
+  });
+  j.extra.forEach(e => kcal += e.k);
+  return {kcal, prot};
+}
+function renderJournal(c){
+  const j = jourData(todayKey());
+  const {kcal, prot} = consomme(c);
+  const restant = c.cal - kcal;
+  $("j-restant").textContent = restant.toLocaleString("fr-CA");
+  $("j-restant").classList.toggle("over", restant < 0);
+  $("j-consomme").textContent = kcal.toLocaleString("fr-CA");
+  $("j-cible").textContent = c.cal.toLocaleString("fr-CA");
+  $("j-prot").textContent = prot;
+  const bar = $("j-bar");
+  bar.style.width = Math.min(100, kcal/c.cal*100)+"%";
+  bar.classList.toggle("over", kcal > c.cal);
+  $("extraList").innerHTML = j.extra.map((e,i)=>`
+    <div class="extra-item"><span>${e.n||"Extra"} — ${e.k} kcal</span>
+    <button class="del" data-x="${i}" title="Supprimer">✕</button></div>`).join("");
+  $("extraList").querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{
+    j.extra.splice(+b.dataset.x,1); save(); renderDash();
+  }));
+  document.querySelectorAll("#d-repas .eat-btn").forEach(b=>b.addEventListener("click",()=>{
+    j.mange[b.dataset.meal] = !j.mange[b.dataset.meal];
+    save(); renderDash();
+  }));
+}
+let repasDay = (new Date().getDay()+6)%7;
+function renderRepas(){
+  const c = calc(); if(!c) return;
+  const parts = c.struct.meals.map(id => `${MEAL_LABELS[id].replace(/^\S+\s/,"")} (~${Math.round(c.split[id]*100)} %)`).join(" + ");
+  $("r-desc").innerHTML = `${c.struct.label}${c.repasAuto ? " — 🤖 recommandé selon ton but" : ""}.<br>${parts} de ton objectif de <b>${c.cal.toLocaleString("fr-CA")}</b> kcal/jour, riche en protéines pour préserver / construire le muscle.`;
+  $("r-prot").textContent = c.prot;
+  $("repasDayTabs").innerHTML = JOURS_LMD.map((j,i)=>
+    `<button class="${i===repasDay?"active":""}" data-d="${i}">${j.slice(0,3)}</button>`).join("");
+  $("repasDayTabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    repasDay = +b.dataset.d; renderRepas();
+  }));
+  $("repasList").innerHTML = `<p class="muted small" style="margin-bottom:8px;">${JOURS_LMD[repasDay]}</p>` + mealHTML(repasDay, c, false);
+  renderMenusRegime();
+  renderSections();
+}
+
+/* ════════════════════════════════ MENUS DU RÉGIME (menus professionnels préchargés) ════════════════════════════════ */
+/* Contenu fourni par l'utilisateur — jours manquants ajoutés au fur et à mesure des fichiers reçus. */
+const MENUS_REGIME = [{"nom":"Menu 5 — Méditerranéen anti-inflammatoire","objectif":"≈ 2 000 kcal / jour · 5 repas","desc":"Chaque recette met en valeur des ingrédients reconnus pour leurs propriétés anti-inflammatoires (curcuma, gingembre, huile d'olive extra vierge, poissons, herbes fraîches…).","jours":[{"jour":"Lundi","theme":"Chaque recette met en valeur des ingrédients reconnus pour leurs propriétés anti‑inflammatoires dans le cadre d'une alimentation méditerranéenne.","repas":[{"type":"Petit-déjeuner","n":"Porridge méditerranéen au curcuma","i":["50 g de flocons d'avoine","250 ml de boisson de soya enrichie","100 g de bleuets","20 g de noix de Grenoble","10 g de graines de chia","1 c. à thé de curcuma","1 pincée de poivre noir","1 c. à thé de cannelle","Zeste de ½ citron"],"prep":["Cuire les flocons d'avoine dans la boisson de soya.","Ajouter le curcuma, la cannelle et le poivre noir.","Garnir de bleuets, graines de chia, noix et zeste de citron."],"tprep":"10 min","tcuis":"8 min","k":430,"p":18,"val":"430 kcal • 18 g protéines • 49 g glucides • 18 g lipides","anti":"Curcuma, poivre noir, cannelle, bleuets, noix, chia et citron.","pourquoi":"La combinaison curcuma-poivre améliore la biodisponibilité de la curcumine, tandis que les fruits rouges et les noix apportent de nombreux polyphénols.","conseil":"Utilisez toujours du curcuma avec une petite quantité de poivre noir."},{"type":"Collation","n":"Kiwi, amandes et thé vert","i":["2 kiwis","20 g d'amandes","1 tasse de thé vert"],"prep":["Servir le tout."],"tprep":"","tcuis":"","k":210,"p":6,"val":"210 kcal • 6 g protéines • 23 g glucides • 11 g lipides","anti":"Thé vert, kiwi et amandes.","pourquoi":"Le thé vert est riche en catéchines antioxydantes.","conseil":"Infuser le thé vert à environ 80 °C pour préserver ses composés."},{"type":"Déjeuner","n":"Salade de pois chiches au gingembre et aux herbes","i":["160 g de pois chiches cuits","100 g de quinoa cuit","100 g de concombre","120 g de tomates","60 g de roquette","15 ml d'huile d'olive extra vierge","10 g de gingembre frais râpé","1 gousse d'ail","Persil","Menthe","Jus de citron"],"prep":["Assembler tous les ingrédients.","Mélanger l'huile d'olive, le gingembre, l'ail et le citron.","Verser la vinaigrette sur la salade."],"tprep":"20 min","tcuis":"","k":610,"p":24,"val":"610 kcal • 24 g protéines • 62 g glucides • 28 g lipides","anti":"Huile d'olive, gingembre, ail, persil, menthe, citron, roquette.","pourquoi":"Cette salade est riche en fibres, en polyphénols et en composés soufrés protecteurs.","conseil":"Préparez la vinaigrette fraîche juste avant de servir."},{"type":"Collation","n":"Yogourt grec, grenade et graines de lin","i":["200 g de yogourt grec","80 g de grenade","10 g de graines de lin moulues"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":220,"p":21,"val":"220 kcal • 21 g protéines • 18 g glucides • 8 g lipides","anti":"Graines de lin et grenade.","pourquoi":"Les probiotiques, les lignanes et les polyphénols soutiennent une alimentation équilibrée.","conseil":"Moudre les graines de lin juste avant utilisation."},{"type":"Souper","n":"Saumon au romarin, brocoli et patate douce","i":["180 g de saumon","200 g de brocoli","180 g de patate douce","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Romarin","Thym","Poivre noir","Citron"],"prep":["Assaisonner le saumon avec le romarin, le thym, l'ail et le poivre.","Cuire le saumon au four.","Cuire le brocoli vapeur et rôtir la patate douce.","Servir avec un filet de citron."],"tprep":"20 min","tcuis":"25 min","k":530,"p":41,"val":"530 kcal • 41 g protéines • 34 g glucides • 22 g lipides","anti":"Saumon, huile d'olive, ail, romarin, thym, brocoli et citron.","pourquoi":"Les oméga‑3 du saumon associés aux herbes aromatiques et aux crucifères renforcent le profil anti‑inflammatoire du repas.","conseil":"Ajoutez les herbes fraîches en fin de cuisson pour un maximum d'arômes."}]},{"jour":"Mardi","theme":"Gingembre, ail, huile d'olive extra vierge et légumes colorés.","repas":[{"type":"Petit-déjeuner","n":"Pain complet, avocat, œufs et curcuma","i":["2 tranches (70 g) de pain complet","2 œufs","½ avocat (80 g)","1 c. à thé de curcuma","1 pincée de poivre noir","5 g de graines de sésame","Paprika doux"],"prep":["Cuire les œufs mollets.","Mélanger le curcuma avec le poivre et saupoudrer les œufs.","Déposer l'avocat sur le pain grillé et servir."],"tprep":"15 min","tcuis":"8 min","k":440,"p":23,"val":"440 kcal • 23 g protéines • 32 g glucides • 23 g lipides","anti":"Curcuma, poivre noir, avocat, graines de sésame.","pourquoi":"Le curcuma, associé au poivre noir, complète les fibres et les bons gras de l'avocat.","conseil":"Préparez les œufs juste avant de servir."},{"type":"Collation","n":"Thé vert, pomme et noix","i":["1 pomme","20 g de noix de Grenoble","1 tasse de thé vert"],"prep":["Servir."],"tprep":"","tcuis":"","k":215,"p":5,"val":"215 kcal • 5 g protéines • 24 g glucides • 12 g lipides","anti":"Thé vert, noix.","pourquoi":"Les catéchines du thé vert et les oméga‑3 végétaux des noix complètent l'apport en antioxydants.","conseil":"Infuser le thé vert à 80 °C."},{"type":"Déjeuner","n":"Bol méditerranéen de lentilles au gingembre","i":["170 g de lentilles cuites","100 g de quinoa cuit","100 g de poivron rouge","80 g de concombre","80 g de tomates","15 ml d'huile d'olive extra vierge","10 g de gingembre frais","2 gousses d'ail","Persil","Menthe","Citron"],"prep":["Assembler les légumes.","Ajouter les lentilles et le quinoa.","Préparer une vinaigrette avec l'huile, le gingembre, l'ail et le citron.","Mélanger et servir."],"tprep":"20 min","tcuis":"10 min","k":620,"p":26,"val":"620 kcal • 26 g protéines • 66 g glucides • 27 g lipides","anti":"Gingembre, ail, huile d'olive, persil, menthe, citron.","pourquoi":"Les légumineuses fournissent fibres et protéines végétales tout en laissant la protéine animale au repas du soir.","conseil":"Laisser reposer la salade 10 minutes avant de servir."},{"type":"Collation","n":"Yogourt grec, mûres et graines de lin","i":["200 g de yogourt grec","80 g de mûres","10 g de graines de lin moulues"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":215,"p":21,"val":"215 kcal • 21 g protéines • 16 g glucides • 8 g lipides","anti":"Graines de lin, mûres.","pourquoi":"Les probiotiques et les polyphénols soutiennent une alimentation riche en composés protecteurs.","conseil":"Moudre les graines juste avant utilisation."},{"type":"Souper","n":"Poulet rôti au romarin, légumes méditerranéens et orge","i":["180 g de poitrine de poulet","200 g de courgettes, aubergines et poivrons","100 g d'orge cuit","10 ml d'huile d'olive extra vierge","Romarin","Thym","2 gousses d'ail","Poivre noir","Citron"],"prep":["Assaisonner le poulet avec les herbes et l'ail.","Rôtir les légumes.","Cuire le poulet puis servir avec l'orge et un filet de citron."],"tprep":"20 min","tcuis":"30 min","k":505,"p":46,"val":"505 kcal • 46 g protéines • 34 g glucides • 17 g lipides","anti":"Huile d'olive, ail, romarin, thym, citron.","pourquoi":"Le poulet est accompagné d'une grande quantité de légumes et d'herbes aromatiques, conformément au modèle méditerranéen.","conseil":"Ajouter le citron juste avant de servir pour préserver sa fraîcheur."}]},{"jour":"Mercredi","theme":"Ail, romarin, thym, légumes crucifères et viande rouge maigre consommée avec modération (une seule fois dans la semaine).","repas":[{"type":"Petit-déjeuner","n":"Yogourt grec, avoine, framboises et cannelle","i":["200 g de yogourt grec nature","40 g de flocons d'avoine","100 g de framboises","15 g de noix","10 g de graines de chia","1 c. à thé de cannelle"],"prep":["Déposer le yogourt dans un bol.","Ajouter l'avoine, les fruits, les noix et les graines.","Saupoudrer de cannelle."],"tprep":"10 min","tcuis":"","k":420,"p":28,"val":"420 kcal • 28 g protéines • 35 g glucides • 18 g lipides","anti":"Cannelle, framboises, chia, noix.","pourquoi":"Les fruits rouges sont riches en anthocyanes et les graines apportent des oméga‑3 végétaux.","conseil":"Utiliser une cannelle de Ceylan pour une saveur plus délicate."},{"type":"Collation","n":"Orange, pistaches et thé vert","i":["1 orange","20 g de pistaches","1 tasse de thé vert"],"prep":["Servir."],"tprep":"","tcuis":"","k":210,"p":6,"val":"210 kcal • 6 g protéines • 21 g glucides • 11 g lipides","anti":"Thé vert, pistaches, agrumes.","pourquoi":"Les agrumes apportent vitamine C et flavonoïdes.","conseil":"Préférer des pistaches non salées."},{"type":"Déjeuner","n":"Bœuf maigre méditerranéen, orge et légumes grillés","i":["150 g de bœuf maigre","100 g d'orge cuit","100 g de courgettes","100 g d'aubergines","100 g de poivrons","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Romarin","Thym","Poivre noir"],"prep":["Assaisonner le bœuf avec l'ail, le romarin et le thym.","Griller les légumes.","Cuire le bœuf à cuisson désirée.","Servir avec l'orge."],"tprep":"20 min","tcuis":"20 min","k":610,"p":42,"val":"610 kcal • 42 g protéines • 35 g glucides • 27 g lipides","anti":"Huile d'olive, ail, romarin, thym, légumes colorés.","pourquoi":"La viande rouge est limitée à une seule journée et accompagnée d'une grande quantité de légumes et de céréales complètes.","conseil":"Choisir une coupe maigre et éviter une cuisson excessive."},{"type":"Collation","n":"Kefir, bleuets et graines de lin","i":["200 ml de kéfir nature","80 g de bleuets","10 g de graines de lin moulues"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":220,"p":12,"val":"220 kcal • 12 g protéines • 18 g glucides • 9 g lipides","anti":"Bleuets, graines de lin.","pourquoi":"Les probiotiques et les polyphénols favorisent un microbiote diversifié.","conseil":"Moudre les graines de lin juste avant consommation."},{"type":"Souper","n":"Soupe de lentilles rouges, épinards et curcuma","i":["150 g de lentilles rouges","100 g d'épinards","80 g de carottes","80 g de céleri","1 oignon","2 gousses d'ail","1 c. à thé de curcuma","1 pincée de poivre noir","10 ml d'huile d'olive extra vierge","Persil frais","Citron"],"prep":["Faire revenir l'oignon et l'ail dans l'huile.","Ajouter les légumes et les lentilles.","Incorporer le curcuma et le poivre.","Cuire jusqu'à tendreté puis terminer avec le persil et le citron."],"tprep":"15 min","tcuis":"30 min","k":520,"p":25,"val":"520 kcal • 25 g protéines • 55 g glucides • 15 g lipides","anti":"Curcuma, poivre noir, ail, huile d'olive, épinards, persil, citron.","pourquoi":"Ce repas végétarien riche en fibres équilibre la consommation de viande rouge du midi.","conseil":"Ajouter le jus de citron juste avant de servir pour préserver la vitamine C."}]},{"jour":"Jeudi","theme":"Origan, basilic, ail, huile d'olive extra vierge et poisson blanc. Le dîner est végétarien afin de maintenir une excellente diversité alimentaire.","repas":[{"type":"Petit-déjeuner","n":"Omelette méditerranéenne aux épinards et origan","i":["2 œufs","70 g d'épinards","40 g de feta","2 tranches (70 g) de pain complet","5 ml d'huile d'olive extra vierge","Origan séché","Poivre noir"],"prep":["Faire revenir les épinards dans l'huile d'olive.","Ajouter les œufs battus, la feta et l'origan.","Servir avec le pain complet."],"tprep":"10 min","tcuis":"8 min","k":430,"p":25,"val":"430 kcal • 25 g protéines • 31 g glucides • 21 g lipides","anti":"Huile d'olive, origan, épinards.","pourquoi":"L'origan apporte des polyphénols tandis que les épinards sont riches en caroténoïdes.","conseil":"Ajouter l'origan en fin de cuisson pour préserver ses arômes."},{"type":"Collation","n":"Poire, noisettes et infusion de gingembre","i":["1 poire","20 g de noisettes","Infusion de gingembre frais"],"prep":["Servir."],"tprep":"","tcuis":"","k":210,"p":4,"val":"210 kcal • 4 g protéines • 24 g glucides • 12 g lipides","anti":"Gingembre, noisettes.","pourquoi":"Le gingembre complète les antioxydants des fruits et des oléagineux.","conseil":"Préparer l'infusion avec du gingembre frais râpé."},{"type":"Déjeuner","n":"Salade de haricots blancs, artichauts et basilic","i":["170 g de haricots blancs cuits","100 g de cœurs d'artichauts","120 g de tomates cerises","80 g de concombre","50 g de roquette","15 ml d'huile d'olive extra vierge","1 gousse d'ail","Basilic frais","Jus de citron"],"prep":["Assembler les légumes et les haricots.","Préparer une vinaigrette avec l'huile, l'ail, le citron et le basilic.","Mélanger et servir."],"tprep":"20 min","tcuis":"","k":600,"p":24,"val":"600 kcal • 24 g protéines • 61 g glucides • 27 g lipides","anti":"Huile d'olive, ail, basilic, artichaut, citron.","pourquoi":"Les haricots blancs et les artichauts fournissent des fibres prébiotiques favorables au microbiote.","conseil":"Utiliser du basilic frais pour une saveur optimale."},{"type":"Collation","n":"Yogourt grec, cerises et graines de chanvre","i":["180 g de yogourt grec","100 g de cerises","10 g de graines de chanvre"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":220,"p":20,"val":"220 kcal • 20 g protéines • 18 g glucides • 8 g lipides","anti":"Cerises, graines de chanvre.","pourquoi":"Les cerises apportent des anthocyanes et les graines de chanvre des bons gras.","conseil":"Choisir des cerises bien mûres."},{"type":"Souper","n":"Cabillaud au citron, brocoli, chou-fleur et quinoa","i":["180 g de filet de cabillaud","150 g de brocoli","150 g de chou-fleur","100 g de quinoa cuit","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Thym","Persil","Citron","Poivre noir"],"prep":["Assaisonner le cabillaud avec l'ail, le thym et le poivre.","Cuire au four.","Cuire les légumes à la vapeur.","Servir avec le quinoa, le persil et le citron."],"tprep":"20 min","tcuis":"25 min","k":530,"p":43,"val":"530 kcal • 43 g protéines • 36 g glucides • 18 g lipides","anti":"Cabillaud, huile d'olive, ail, thym, persil, brocoli, chou-fleur.","pourquoi":"Les légumes crucifères et les herbes aromatiques renforcent le profil anti-inflammatoire du repas.","conseil":"Ajouter le persil frais juste avant de servir."}]},{"jour":"Vendredi","theme":"Oméga‑3 marins, cannelle, graines de lin, ail, curcuma et légumes colorés.","repas":[{"type":"Petit-déjeuner","n":"Gruau méditerranéen à la pomme, cannelle et graines de lin","i":["50 g de flocons d'avoine","250 ml de boisson de soya enrichie","100 g de pomme en dés","10 g de graines de lin moulues","15 g de noix de Grenoble","1 c. à thé de cannelle de Ceylan","1 pincée de muscade"],"prep":["Cuire l'avoine dans la boisson de soya.","Ajouter la pomme, la cannelle et la muscade.","Garnir de graines de lin et de noix."],"tprep":"10 min","tcuis":"8 min","k":430,"p":18,"val":"430 kcal • 18 g protéines • 50 g glucides • 17 g lipides","anti":"Cannelle, graines de lin, noix et avoine.","pourquoi":"Les fibres solubles et les oméga‑3 végétaux favorisent un profil nutritionnel protecteur.","conseil":"Ajouter les graines de lin juste avant de servir."},{"type":"Collation","n":"Bleuets, amandes et thé vert","i":["100 g de bleuets","20 g d'amandes","1 tasse de thé vert"],"prep":["Servir."],"tprep":"","tcuis":"","k":200,"p":5,"val":"200 kcal • 5 g protéines • 18 g glucides • 11 g lipides","anti":"Bleuets, thé vert, amandes.","pourquoi":"Les anthocyanes et les catéchines apportent de puissants antioxydants.","conseil":"Choisir des bleuets frais ou surgelés sans sucre."},{"type":"Déjeuner","n":"Poulet grillé au curcuma, boulgour et salade méditerranéenne","i":["170 g de poitrine de poulet","100 g de boulgour cuit","120 g de tomates","80 g de concombre","50 g de roquette","10 ml d'huile d'olive extra vierge","1 c. à thé de curcuma","1 pincée de poivre noir","1 gousse d'ail","Persil","Citron"],"prep":["Mariner le poulet avec le curcuma, le poivre, l'ail et le citron.","Griller le poulet.","Servir avec le boulgour et la salade."],"tprep":"20 min","tcuis":"20 min","k":610,"p":45,"val":"610 kcal • 45 g protéines • 38 g glucides • 23 g lipides","anti":"Curcuma, poivre noir, huile d'olive, ail, persil et citron.","pourquoi":"L'association curcuma-poivre noir maximise l'utilisation de la curcumine.","conseil":"Laisser mariner le poulet au moins 30 minutes."},{"type":"Collation","n":"Yogourt grec, grenade et noix","i":["180 g de yogourt grec","80 g de grenade","15 g de noix"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":230,"p":20,"val":"230 kcal • 20 g protéines • 18 g glucides • 10 g lipides","anti":"Grenade, noix.","pourquoi":"La grenade fournit des polyphénols reconnus pour leur activité antioxydante.","conseil":"Utiliser une grenade fraîche lorsqu'elle est de saison."},{"type":"Souper","n":"Sardines grillées, ratatouille provençale et quinoa","i":["180 g de sardines fraîches","180 g de ratatouille (aubergine, courgette, tomate, poivron)","100 g de quinoa cuit","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Origan","Basilic","Thym","Citron"],"prep":["Griller les sardines avec l'ail et les herbes.","Cuire doucement la ratatouille à l'huile d'olive.","Servir avec le quinoa et un filet de citron."],"tprep":"20 min","tcuis":"20 min","k":525,"p":38,"val":"525 kcal • 38 g protéines • 34 g glucides • 22 g lipides","anti":"Sardines, huile d'olive, ail, origan, basilic, thym, ratatouille.","pourquoi":"Les sardines sont l'une des meilleures sources alimentaires d'EPA et de DHA, tandis que les légumes méditerranéens apportent une grande richesse en polyphénols.","conseil":"Ne pas trop cuire les sardines afin de préserver leur texture."}]},{"jour":"Samedi","theme":"Agneau maigre, romarin, menthe, curcuma, légumes méditerranéens et légumineuses.","repas":[{"type":"Petit-déjeuner","n":"Tartines méditerranéennes au houmous, avocat et tomates","i":["2 tranches (70 g) de pain complet","60 g de houmous","70 g d'avocat","80 g de tomates","10 g de graines de sésame","Origan séché","Poivre noir","5 ml d'huile d'olive extra vierge"],"prep":["Griller le pain.","Tartiner de houmous.","Ajouter l'avocat, les tomates, l'origan et les graines de sésame.","Terminer avec un filet d'huile d'olive."],"tprep":"15 min","tcuis":"","k":430,"p":17,"val":"430 kcal • 17 g protéines • 40 g glucides • 21 g lipides","anti":"Huile d'olive, pois chiches, avocat, origan, sésame.","pourquoi":"Les légumineuses, l'huile d'olive et les bons gras végétaux favorisent un apport élevé en composés protecteurs.","conseil":"Utiliser un houmous préparé avec du tahini et de l'huile d'olive extra vierge."},{"type":"Collation","n":"Fraises, noix et infusion au curcuma","i":["150 g de fraises","20 g de noix","Infusion de curcuma frais et gingembre"],"prep":["Servir."],"tprep":"","tcuis":"","k":205,"p":5,"val":"205 kcal • 5 g protéines • 18 g glucides • 13 g lipides","anti":"Curcuma, gingembre, fraises, noix.","pourquoi":"Les baies apportent des polyphénols et les noix des acides gras insaturés.","conseil":"Ajouter une pincée de poivre noir dans l'infusion."},{"type":"Déjeuner","n":"Agneau maigre grillé, taboulé de boulgour et persil","i":["150 g de gigot d'agneau dégraissé","100 g de boulgour cuit","150 g de tomates","80 g de concombre","40 g de persil frais","20 g de menthe fraîche","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Romarin","Citron"],"prep":["Mariner l'agneau avec l'ail, le romarin, le citron et l'huile d'olive.","Griller l'agneau.","Préparer un taboulé avec le boulgour, les légumes, le persil et la menthe.","Servir ensemble."],"tprep":"25 min","tcuis":"20 min","k":620,"p":38,"val":"620 kcal • 38 g protéines • 40 g glucides • 28 g lipides","anti":"Romarin, ail, persil, menthe, huile d'olive, citron.","pourquoi":"L'agneau est consommé en portion modérée et accompagné d'une abondance d'herbes fraîches et de légumes.","conseil":"Mariner la viande au moins une heure pour développer les saveurs."},{"type":"Collation","n":"Yogourt grec, figues fraîches et graines de chia","i":["180 g de yogourt grec","2 figues fraîches (100 g)","10 g de graines de chia"],"prep":["Assembler et servir."],"tprep":"","tcuis":"","k":225,"p":20,"val":"225 kcal • 20 g protéines • 20 g glucides • 8 g lipides","anti":"Graines de chia, figues.","pourquoi":"Les fibres et les oméga‑3 végétaux complètent cette collation.","conseil":"Choisir des figues bien mûres."},{"type":"Souper","n":"Ragoût méditerranéen de pois chiches, épinards et curcuma","i":["170 g de pois chiches cuits","120 g d'épinards","100 g de tomates concassées","80 g de carottes","1 oignon","2 gousses d'ail","10 ml d'huile d'olive extra vierge","1 c. à thé de curcuma","1 pincée de poivre noir","Cumin","Persil","Citron"],"prep":["Faire revenir l'oignon et l'ail dans l'huile d'olive.","Ajouter les légumes, les pois chiches et les épices.","Laisser mijoter 25 à 30 minutes.","Ajouter le persil et le citron avant de servir."],"tprep":"20 min","tcuis":"30 min","k":515,"p":24,"val":"515 kcal • 24 g protéines • 56 g glucides • 16 g lipides","anti":"Curcuma, poivre noir, cumin, ail, huile d'olive, pois chiches, épinards.","pourquoi":"Ce repas végétarien riche en fibres équilibre la consommation d'agneau du midi et augmente la diversité des végétaux.","conseil":"Ajouter le citron juste avant de servir."}]},{"jour":"Dimanche","theme":"Fruits de mer, ail, safran, persil, thym, huile d'olive extra vierge et légumes méditerranéens.","repas":[{"type":"Petit-déjeuner","n":"Bol méditerranéen au kéfir, grenade et noix","i":["250 ml de kéfir nature","40 g de flocons d'avoine","80 g d'arilles de grenade","15 g de noix de Grenoble","10 g de graines de chia","1 c. à thé de cannelle de Ceylan"],"prep":["Mélanger le kéfir et l'avoine.","Ajouter la grenade, les noix, les graines de chia et la cannelle.","Servir immédiatement."],"tprep":"10 min","tcuis":"","k":425,"p":22,"val":"425 kcal • 22 g protéines • 39 g glucides • 18 g lipides","anti":"Kéfir, grenade, noix, chia, cannelle.","pourquoi":"Les probiotiques, les polyphénols et les oméga‑3 végétaux contribuent à un microbiote diversifié.","conseil":"Préparer le bol juste avant de le consommer."},{"type":"Collation","n":"Clémentines, pistaches et thé vert","i":["2 clémentines","20 g de pistaches non salées","1 tasse de thé vert"],"prep":["Servir."],"tprep":"","tcuis":"","k":205,"p":5,"val":"205 kcal • 5 g protéines • 23 g glucides • 10 g lipides","anti":"Thé vert, pistaches, agrumes.","pourquoi":"Les flavonoïdes des agrumes et les catéchines du thé vert complètent l'apport en antioxydants.","conseil":"Infuser le thé vert à 80 °C."},{"type":"Déjeuner","n":"Poêlée de crevettes à l'ail, quinoa et légumes méditerranéens","i":["180 g de crevettes décortiquées","100 g de quinoa cuit","100 g de courgettes","100 g de poivrons","80 g de tomates cerises","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Persil frais","Safran","Citron"],"prep":["Faire revenir l'ail dans l'huile d'olive.","Ajouter les crevettes, le safran et les légumes.","Cuire quelques minutes puis servir avec le quinoa, le persil et le citron."],"tprep":"20 min","tcuis":"15 min","k":600,"p":42,"val":"600 kcal • 42 g protéines • 39 g glucides • 22 g lipides","anti":"Huile d'olive, ail, persil, safran, citron, légumes colorés.","pourquoi":"Les fruits de mer apportent des protéines maigres et les légumes une grande richesse en polyphénols.","conseil":"Ne pas trop cuire les crevettes afin qu'elles demeurent tendres."},{"type":"Collation","n":"Yogourt grec, bleuets et graines de lin","i":["180 g de yogourt grec","100 g de bleuets","10 g de graines de lin moulues"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":220,"p":20,"val":"220 kcal • 20 g protéines • 18 g glucides • 8 g lipides","anti":"Bleuets, graines de lin.","pourquoi":"Les anthocyanes des bleuets et les lignanes du lin complètent ce repas.","conseil":"Moudre les graines de lin juste avant utilisation."},{"type":"Souper","n":"Dorade au thym, fenouil rôti et légumes verts","i":["180 g de filet de dorade","150 g de fenouil","150 g de haricots verts","100 g de pommes de terre grenaille","10 ml d'huile d'olive extra vierge","2 gousses d'ail","Thym frais","Romarin","Citron","Poivre noir"],"prep":["Assaisonner la dorade avec le thym, le romarin et l'ail.","Rôtir le fenouil et les pommes de terre.","Cuire les haricots verts à la vapeur.","Servir avec un filet de citron."],"tprep":"20 min","tcuis":"25 min","k":540,"p":41,"val":"540 kcal • 41 g protéines • 38 g glucides • 20 g lipides","anti":"Dorade, huile d'olive, thym, romarin, ail, fenouil.","pourquoi":"Le poisson blanc complète la semaine avec une excellente qualité protéique et une abondance de légumes.","conseil":"Ajouter les herbes fraîches après cuisson pour préserver leurs arômes."}]}]},{"nom":"Menu — Santé cardiovasculaire","objectif":"≈ 2 100 kcal / jour · 5 repas","desc":"Riche en oméga-3, fibres et antioxydants : poissons gras, légumineuses, grains entiers, noix et huile d'olive pour soutenir la santé cardiovasculaire.","jours":[{"jour":"Lundi","theme":"Riche en oméga‑3, fibres et antioxydants.","repas":[{"type":"Petit-déjeuner","n":"Bol méditerranéen protéiné","i":["Flocons d'avoine : 70 g","Yogourt grec 2 % : 200 g","Bleuets : 100 g","Noix de Grenoble : 20 g","Graines de chia : 15 g","Miel : 10 g","Cannelle : 2 g"],"prep":["Préparer les ingrédients, cuire au four ou à la vapeur selon le plat, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Servir immédiatement avec une présentation soignée."],"tprep":"","tcuis":"","k":560,"p":31,"val":"≈560 kcal | P 31 g | G 56 g | L 22 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Pomme & Amandes","i":["Pomme : 180 g","Amandes : 30 g"],"prep":["Préparer les ingrédients, cuire au four ou à la vapeur selon le plat, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Servir immédiatement avec une présentation soignée."],"tprep":"","tcuis":"","k":270,"p":7,"val":"≈270 kcal | P 7 g | G 29 g | L 15 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Saumon rôti aux herbes, quinoa et brocoli","i":["Filet de saumon : 180 g","Quinoa cuit : 160 g","Brocoli : 200 g","Huile d'olive : 15 ml","Citron : 30 g","Persil : 10 g","Ail : 5 g"],"prep":["Préparer les ingrédients, cuire au four ou à la vapeur selon le plat, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Servir immédiatement avec une présentation soignée."],"tprep":"","tcuis":"","k":690,"p":47,"val":"≈690 kcal | P 47 g | G 40 g | L 34 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Houmous & Carottes & Concombre","i":["Houmous : 70 g","Carottes : 120 g","Concombre : 120 g"],"prep":["Préparer les ingrédients, cuire au four ou à la vapeur selon le plat, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Servir immédiatement avec une présentation soignée."],"tprep":"","tcuis":"","k":200,"p":6,"val":"≈200 kcal | P 6 g | G 20 g | L 10 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Soupe de lentilles et salade grecque légère","i":["Soupe de lentilles : 400 ml","Pain complet : 70 g","Salade grecque : 180 g","Huile d'olive : 10 ml"],"prep":["Préparer les ingrédients, cuire au four ou à la vapeur selon le plat, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Servir immédiatement avec une présentation soignée."],"tprep":"","tcuis":"","k":430,"p":28,"val":"≈430 kcal | P 28 g | G 48 g | L 14 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Mardi","theme":", cuisine méditerranéenne gastronomique favorisant la santé cardiovasculaire.","repas":[{"type":"Petit-déjeuner","n":"Omelette méditerranéenne","i":["Œufs : 2 (120 g)","Blancs d'œufs : 120 g","Épinards : 60 g","Tomates cerises : 80 g","Pain complet : 70 g","Huile d'olive : 5 ml"],"prep":["utiliser des ingrédients frais, cuire au gril, au four ou à feu doux selon le plat. Assaisonner avec des herbes fraîches, de l'ail et du citron. Dresser soigneusement."],"tprep":"","tcuis":"","k":500,"p":37,"val":"≈500 kcal | P 37 g | G 36 g | L 22 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Poire & Pistaches non salées","i":["Poire : 180 g","Pistaches non salées : 30 g"],"prep":["utiliser des ingrédients frais, cuire au gril, au four ou à feu doux selon le plat. Assaisonner avec des herbes fraîches, de l'ail et du citron. Dresser soigneusement."],"tprep":"","tcuis":"","k":260,"p":7,"val":"≈260 kcal | P 7 g | G 31 g | L 13 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Dorade grillée, orge perlé et fenouil braisé","i":["Filet de dorade : 180 g","Orge perlé cuit : 170 g","Fenouil : 180 g","Huile d'olive : 15 ml","Citron : 30 g","Aneth : 5 g"],"prep":["utiliser des ingrédients frais, cuire au gril, au four ou à feu doux selon le plat. Assaisonner avec des herbes fraîches, de l'ail et du citron. Dresser soigneusement."],"tprep":"","tcuis":"","k":680,"p":45,"val":"≈680 kcal | P 45 g | G 48 g | L 28 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Yogourt grec 2 % & Noix","i":["Yogourt grec 2 % : 170 g","Noix : 20 g"],"prep":["utiliser des ingrédients frais, cuire au gril, au four ou à feu doux selon le plat. Assaisonner avec des herbes fraîches, de l'ail et du citron. Dresser soigneusement."],"tprep":"","tcuis":"","k":220,"p":20,"val":"≈220 kcal | P 20 g | G 9 g | L 12 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Minestrone méditerranéen et salade de pois chiches","i":["Soupe minestrone : 400 ml","Pois chiches cuits : 120 g","Roquette : 60 g","Tomates : 100 g","Huile d'olive : 10 ml","Pain complet : 50 g"],"prep":["utiliser des ingrédients frais, cuire au gril, au four ou à feu doux selon le plat. Assaisonner avec des herbes fraîches, de l'ail et du citron. Dresser soigneusement."],"tprep":"","tcuis":"","k":470,"p":22,"val":"≈470 kcal | P 22 g | G 52 g | L 16 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Mercredi","theme":". Journée riche en fibres, protéines maigres, légumes colorés et huile d'olive extra vierge.","repas":[{"type":"Petit-déjeuner","n":"Yogourt grec, avoine et fruits rouges","i":["Yogourt grec 2 % : 220 g","Flocons d'avoine : 60 g","Fraises : 100 g","Framboises : 80 g","Graines de lin moulues : 15 g","Noisettes : 20 g"],"prep":["privilégier une cuisson au four, au gril ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage soigné."],"tprep":"","tcuis":"","k":540,"p":32,"val":"≈540 kcal | P 32 g | G 47 g | L 23 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Orange & Noix de Grenoble","i":["Orange : 180 g","Noix de Grenoble : 25 g"],"prep":["privilégier une cuisson au four, au gril ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage soigné."],"tprep":"","tcuis":"","k":240,"p":5,"val":"≈240 kcal | P 5 g | G 20 g | L 17 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Poulet citron-romarin, boulgour et ratatouille","i":["Poitrine de poulet : 180 g","Boulgour cuit : 170 g","Ratatouille : 220 g","Huile d'olive : 15 ml","Citron : 30 g","Romarin frais : 3 g"],"prep":["privilégier une cuisson au four, au gril ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage soigné."],"tprep":"","tcuis":"","k":690,"p":52,"val":"≈690 kcal | P 52 g | G 48 g | L 25 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Fromage cottage 2 % & Kiwi","i":["Fromage cottage 2 % : 180 g","Kiwi : 100 g"],"prep":["privilégier une cuisson au four, au gril ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage soigné."],"tprep":"","tcuis":"","k":210,"p":24,"val":"≈210 kcal | P 24 g | G 16 g | L 4 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Truite grillée, épinards sautés et lentilles","i":["Filet de truite : 170 g","Lentilles cuites : 150 g","Épinards : 180 g","Huile d'olive : 10 ml","Ail : 5 g"],"prep":["privilégier une cuisson au four, au gril ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage soigné."],"tprep":"","tcuis":"","k":470,"p":42,"val":"≈470 kcal | P 42 g | G 28 g | L 19 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Jeudi","theme":". Cuisine méditerranéenne gastronomique mettant l'accent sur les fibres, les poissons maigres, les légumineuses et l'huile d'olive extra vierge.","repas":[{"type":"Petit-déjeuner","n":"Toast méditerranéen à l'avocat et œufs","i":["Pain complet : 80 g","Avocat : 80 g","Œufs : 2 (120 g)","Tomates cerises : 100 g","Huile d'olive : 5 ml","Origan : 2 g"],"prep":["cuire les protéines doucement pour préserver leur tendreté. Assaisonner avec des herbes fraîches, du citron et de l'huile d'olive. Dresser avec des légumes colorés."],"tprep":"","tcuis":"","k":530,"p":24,"val":"≈530 kcal | P 24 g | G 39 g | L 30 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Yogourt grec 2 % & Bleuets & Graines de citrouille","i":["Yogourt grec 2 % : 170 g","Bleuets : 100 g","Graines de citrouille : 20 g"],"prep":["cuire les protéines doucement pour préserver leur tendreté. Assaisonner avec des herbes fraîches, du citron et de l'huile d'olive. Dresser avec des légumes colorés."],"tprep":"","tcuis":"","k":260,"p":21,"val":"≈260 kcal | P 21 g | G 17 g | L 11 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Morue en croûte d'herbes, purée de pois chiches et asperges","i":["Filet de morue : 180 g","Pois chiches cuits : 180 g","Asperges : 180 g","Huile d'olive : 15 ml","Persil : 10 g","Citron : 30 g","Ail : 5 g"],"prep":["cuire les protéines doucement pour préserver leur tendreté. Assaisonner avec des herbes fraîches, du citron et de l'huile d'olive. Dresser avec des légumes colorés."],"tprep":"","tcuis":"","k":690,"p":52,"val":"≈690 kcal | P 52 g | G 46 g | L 26 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Poire & Noix de Grenoble","i":["Poire : 180 g","Noix de Grenoble : 25 g"],"prep":["cuire les protéines doucement pour préserver leur tendreté. Assaisonner avec des herbes fraîches, du citron et de l'huile d'olive. Dresser avec des légumes colorés."],"tprep":"","tcuis":"","k":240,"p":4,"val":"≈240 kcal | P 4 g | G 25 g | L 16 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Salade de lentilles, roquette et feta légère","i":["Lentilles cuites : 180 g","Roquette : 70 g","Concombre : 100 g","Tomates : 120 g","Feta légère : 40 g","Huile d'olive : 10 ml","Pain complet : 60 g"],"prep":["cuire les protéines doucement pour préserver leur tendreté. Assaisonner avec des herbes fraîches, du citron et de l'huile d'olive. Dresser avec des légumes colorés."],"tprep":"","tcuis":"","k":420,"p":23,"val":"≈420 kcal | P 23 g | G 42 g | L 16 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Vendredi","theme":". Menu méditerranéen favorisant la santé cardiovasculaire grâce aux poissons, céréales complètes, légumes et huile d'olive.","repas":[{"type":"Petit-déjeuner","n":"Porridge méditerranéen","i":["Flocons d'avoine : 70 g","Lait 1 % : 250 ml","Yogourt grec 2 % : 150 g","Figues fraîches : 100 g","Noix : 20 g","Graines de chia : 10 g"],"prep":["cuire les fruits de mer et le poisson juste à point. Faire griller les légumes avec un filet d'huile d'olive, puis dresser avec des herbes fraîches et du citron."],"tprep":"","tcuis":"","k":540,"p":30,"val":"≈540 kcal | P 30 g | G 55 g | L 20 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Raisin & Amandes","i":["Raisin : 150 g","Amandes : 25 g"],"prep":["cuire les fruits de mer et le poisson juste à point. Faire griller les légumes avec un filet d'huile d'olive, puis dresser avec des herbes fraîches et du citron."],"tprep":"","tcuis":"","k":230,"p":6,"val":"≈230 kcal | P 6 g | G 27 g | L 12 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Crevettes à l'ail, épeautre et légumes grillés","i":["Crevettes décortiquées : 180 g","Épeautre cuit : 170 g","Courgettes : 120 g","Poivrons : 120 g","Aubergine : 100 g","Huile d'olive : 15 ml","Ail : 8 g","Persil : 10 g"],"prep":["cuire les fruits de mer et le poisson juste à point. Faire griller les légumes avec un filet d'huile d'olive, puis dresser avec des herbes fraîches et du citron."],"tprep":"","tcuis":"","k":690,"p":48,"val":"≈690 kcal | P 48 g | G 50 g | L 24 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Houmous & Céleri & Concombre","i":["Houmous : 60 g","Céleri : 120 g","Concombre : 120 g"],"prep":["cuire les fruits de mer et le poisson juste à point. Faire griller les légumes avec un filet d'huile d'olive, puis dresser avec des herbes fraîches et du citron."],"tprep":"","tcuis":"","k":180,"p":6,"val":"≈180 kcal | P 6 g | G 18 g | L 9 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Bar rôti, salade d'orge et épinards","i":["Filet de bar : 180 g","Orge cuit : 150 g","Épinards : 150 g","Tomates cerises : 100 g","Huile d'olive : 10 ml","Citron : 30 g"],"prep":["cuire les fruits de mer et le poisson juste à point. Faire griller les légumes avec un filet d'huile d'olive, puis dresser avec des herbes fraîches et du citron."],"tprep":"","tcuis":"","k":470,"p":40,"val":"≈470 kcal | P 40 g | G 34 g | L 18 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Samedi","theme":"Objectif nutritionnel : environ 2 100 kcal. Journée inspirée de la cuisine méditerranéenne mettant l'accent sur les protéines maigres, les fibres, les bons gras et les aliments riches en antioxydants.","repas":[{"type":"Petit-déjeuner","n":"Omelette aux légumes et avocat","i":["Œufs entiers : 2 (120 g)","Blancs d'œufs : 120 g","Épinards frais : 60 g","Champignons : 80 g","Avocat : 70 g","Pain complet : 70 g","Huile d'olive : 5 ml"],"prep":["privilégier une cuisson au gril, au four ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage élégant."],"tprep":"","tcuis":"","k":530,"p":36,"val":"≈530 kcal | P 36 g | G 34 g | L 26 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Yogourt grec 2 % & Framboises & Noix","i":["Yogourt grec 2 % : 200 g","Framboises : 100 g","Noix : 20 g"],"prep":["privilégier une cuisson au gril, au four ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage élégant."],"tprep":"","tcuis":"","k":260,"p":24,"val":"≈260 kcal | P 24 g | G 16 g | L 12 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Dinde grillée, quinoa méditerranéen et légumes rôtis","i":["Poitrine de dinde : 180 g","Quinoa cuit : 170 g","Courgettes : 120 g","Poivrons rouges : 120 g","Aubergine : 100 g","Huile d'olive : 15 ml","Citron : 30 g","Thym frais : 3 g"],"prep":["privilégier une cuisson au gril, au four ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage élégant."],"tprep":"","tcuis":"","k":700,"p":55,"val":"≈700 kcal | P 55 g | G 49 g | L 24 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Houmous & Carottes & Poivron jaune","i":["Houmous : 70 g","Carottes : 120 g","Poivron jaune : 100 g"],"prep":["privilégier une cuisson au gril, au four ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage élégant."],"tprep":"","tcuis":"","k":200,"p":7,"val":"≈200 kcal | P 7 g | G 19 g | L 10 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Truite grillée, lentilles et brocoli vapeur","i":["Filet de truite : 180 g","Lentilles cuites : 160 g","Brocoli : 200 g","Huile d'olive : 10 ml","Persil frais : 10 g","Citron : 30 g"],"prep":["privilégier une cuisson au gril, au four ou à la vapeur. Assaisonner avec des herbes fraîches, de l'ail, du citron et de l'huile d'olive extra vierge. Servir avec un dressage élégant."],"tprep":"","tcuis":"","k":430,"p":42,"val":"≈430 kcal | P 42 g | G 28 g | L 15 g","anti":"","pourquoi":"","conseil":""}]},{"jour":"Dimanche","theme":"Objectif nutritionnel : environ 2 100 kcal. Journée de cuisine méditerranéenne raffinée, riche en oméga‑3, fibres, légumes et protéines maigres.","repas":[{"type":"Petit-déjeuner","n":"Pancakes d'avoine au yogourt grec et fruits","i":["Flocons d'avoine : 70 g","Œufs : 2 (120 g)","Yogourt grec 2 % : 180 g","Fraises : 120 g","Graines de chia : 10 g","Miel : 10 g"],"prep":["privilégier des produits frais, cuire les poissons juste à point, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Dresser avec soin."],"tprep":"","tcuis":"","k":520,"p":34,"val":"≈520 kcal | P 34 g | G 48 g | L 18 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Pomme & Noix de Grenoble","i":["Pomme : 180 g","Noix de Grenoble : 25 g"],"prep":["privilégier des produits frais, cuire les poissons juste à point, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Dresser avec soin."],"tprep":"","tcuis":"","k":240,"p":4,"val":"≈240 kcal | P 4 g | G 24 g | L 16 g","anti":"","pourquoi":"","conseil":""},{"type":"Déjeuner","n":"Truite aux herbes, riz complet et légumes grillés","i":["Filet de truite : 180 g","Riz brun cuit : 170 g","Courgettes : 120 g","Poivrons : 120 g","Aubergine : 100 g","Huile d'olive : 15 ml","Citron : 30 g","Thym : 3 g"],"prep":["privilégier des produits frais, cuire les poissons juste à point, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Dresser avec soin."],"tprep":"","tcuis":"","k":700,"p":46,"val":"≈700 kcal | P 46 g | G 53 g | L 28 g","anti":"","pourquoi":"","conseil":""},{"type":"Collation","n":"Yogourt grec 2 % & Bleuets & Amandes","i":["Yogourt grec 2 % : 170 g","Bleuets : 100 g","Amandes : 20 g"],"prep":["privilégier des produits frais, cuire les poissons juste à point, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Dresser avec soin."],"tprep":"","tcuis":"","k":250,"p":22,"val":"≈250 kcal | P 22 g | G 17 g | L 11 g","anti":"","pourquoi":"","conseil":""},{"type":"Souper","n":"Salade de lentilles, saumon fumé et avocat","i":["Lentilles cuites : 160 g","Saumon fumé : 90 g","Avocat : 80 g","Roquette : 70 g","Tomates cerises : 120 g","Huile d'olive : 10 ml","Pain complet : 60 g"],"prep":["privilégier des produits frais, cuire les poissons juste à point, assaisonner avec des herbes fraîches, du citron et de l'huile d'olive extra vierge. Dresser avec soin."],"tprep":"","tcuis":"","k":420,"p":29,"val":"≈420 kcal | P 29 g | G 34 g | L 17 g","anti":"","pourquoi":"","conseil":""}]}]},{"nom":"Menu 4 — Longévité méditerranéenne","objectif":"≈ 2 100 kcal / jour · 5 repas","desc":"Inspiré des Zones Bleues (Crète, Ikaria, Sardaigne) : légumineuses, noix, produits fermentés, poissons et huile d'olive — les habitudes alimentaires des populations les plus longévives au monde.","jours":[{"jour":"Lundi","theme":"Inspiré des Zones Bleues (Crète, Ikaria, Sardaigne)","repas":[{"type":"Petit-déjeuner","n":"Yogourt grec, noix, figues et miel","i":["250 g de yogourt grec nature","2 figues fraîches (120 g)","20 g de noix","10 g de miel","Cannelle"],"prep":["Déposer le yogourt dans un bol.","Ajouter les figues en quartiers.","Parsemer de noix, miel et cannelle."],"tprep":"10 min","tcuis":"","k":430,"p":28,"val":"430 kcal • 28 g protéines • 30 g glucides • 20 g lipides","anti":"","pourquoi":"Les noix, les produits fermentés et les fruits apportent des nutriments associés à une bonne santé cardiovasculaire.","conseil":"Utilisez des noix légèrement grillées.","astuce":"Consommez quotidiennement une poignée de noix non salées."},{"type":"Collation","n":"Pomme et amandes","i":["1 pomme (180 g)","20 g d'amandes"],"prep":["Servir."],"tprep":"","tcuis":"","k":210,"p":5,"val":"210 kcal • 5 g protéines • 24 g glucides • 11 g lipides","anti":"","pourquoi":"Fibres et bons gras favorisent la satiété.","conseil":"Choisissez des fruits de saison.","astuce":"Privilégiez les collations simples."},{"type":"Déjeuner","n":"Salade crétoise au pois chiches et feta","i":["150 g de pois chiches cuits","80 g de feta","150 g de tomates","120 g de concombre","30 g d'oignon rouge","15 ml d'huile d'olive","Olives noires 30 g","Origan"],"prep":["Mélanger tous les ingrédients.","Assaisonner avec l'huile et l'origan."],"tprep":"20 min","tcuis":"","k":620,"p":25,"val":"620 kcal • 25 g protéines • 42 g glucides • 36 g lipides","anti":"","pourquoi":"Les légumineuses et l'huile d'olive sont des piliers de l'alimentation méditerranéenne.","conseil":"Ajoutez l'huile juste avant de servir.","astuce":"Consommez des légumineuses plusieurs fois par semaine."},{"type":"Collation","n":"Carottes, céleri et houmous","i":["150 g de carottes","100 g de céleri","50 g de houmous"],"prep":["Servir les crudités avec le houmous."],"tprep":"","tcuis":"","k":180,"p":6,"val":"180 kcal • 6 g protéines • 18 g glucides • 8 g lipides","anti":"","pourquoi":"Apporte fibres et protéines végétales.","conseil":"Préparez les crudités à l'avance.","astuce":"Remplacez les collations ultra-transformées par des légumes."},{"type":"Souper","n":"Dorade au four, légumes rôtis et boulgour","i":["200 g de dorade","120 g de courgettes","120 g d'aubergine","120 g de poivron","100 g de boulgour cuit","15 ml d'huile d'olive","Thym","Citron"],"prep":["Rôtir les légumes.","Cuire la dorade au four.","Servir avec le boulgour et le citron."],"tprep":"20 min","tcuis":"30 min","k":650,"p":45,"val":"650 kcal • 45 g protéines • 42 g glucides • 28 g lipides","anti":"","pourquoi":"Le poisson, les céréales complètes et les légumes constituent un repas emblématique du régime méditerranéen.","conseil":"Arrosez de citron juste avant de servir.","astuce":"Mangez du poisson au moins deux fois par semaine."}]},{"jour":"Mardi","theme":"Inspiré des Zones Bleues (Crète, Ikaria, Sardaigne, Cilento)","repas":[{"type":"Petit-déjeuner","n":"Dakos crétois revisité","i":["70 g de pain complet grillé","120 g de tomates mûres","60 g de fromage frais léger","10 ml d'huile d'olive extra vierge","Origan séché","Basilic frais"],"prep":["Griller le pain.","Râper les tomates et les déposer sur le pain.","Ajouter le fromage frais, l'huile d'olive et les herbes."],"tprep":"15 min","tcuis":"","k":420,"p":22,"val":"420 kcal • 22 g protéines • 36 g glucides • 19 g lipides","anti":"","pourquoi":"Le pain complet, les tomates et l'huile d'olive apportent fibres, antioxydants et graisses mono-insaturées.","conseil":"Utilisez des tomates très mûres pour obtenir un maximum de saveur.","astuce":"Les aliments simples et peu transformés sont une caractéristique des Zones Bleues."},{"type":"Collation","n":"Poire et noix","i":["1 poire (180 g)","20 g de noix"],"prep":["Servir la poire avec les noix."],"tprep":"","tcuis":"","k":220,"p":5,"val":"220 kcal • 5 g protéines • 25 g glucides • 12 g lipides","anti":"","pourquoi":"Les fruits et les oléagineux apportent fibres et polyphénols.","conseil":"Choisissez des fruits de saison.","astuce":"Une poignée de noix par jour est fréquente dans l'alimentation méditerranéenne."},{"type":"Déjeuner","n":"Minestrone méditerranéen et salade de haricots blancs","i":["300 ml de minestrone maison","150 g de haricots blancs cuits","100 g de tomates","80 g de concombre","20 g d'oignon rouge","15 ml d'huile d'olive","Persil frais","Jus de citron"],"prep":["Préparer le minestrone avec des légumes variés.","Assembler la salade de haricots.","Servir la soupe et la salade ensemble."],"tprep":"25 min","tcuis":"35 min","k":610,"p":24,"val":"610 kcal • 24 g protéines • 58 g glucides • 27 g lipides","anti":"","pourquoi":"Les légumineuses et les légumes sont associés à une meilleure santé cardiovasculaire.","conseil":"Ajoutez les herbes fraîches au moment de servir.","astuce":"Consommez régulièrement des soupes de légumes."},{"type":"Collation","n":"Yogourt grec et bleuets","i":["200 g de yogourt grec nature","100 g de bleuets"],"prep":["Mélanger et servir."],"tprep":"","tcuis":"","k":190,"p":20,"val":"190 kcal • 20 g protéines • 15 g glucides • 5 g lipides","anti":"","pourquoi":"Le yogourt fermenté et les petits fruits apportent probiotiques et antioxydants.","conseil":"Évitez le sucre ajouté.","astuce":"Les petits fruits sont riches en composés protecteurs."},{"type":"Souper","n":"Sardines grillées, fenouil braisé et quinoa","i":["200 g de sardines fraîches","180 g de fenouil","100 g de quinoa cuit","10 ml d'huile d'olive","Citron","Persil","Ail"],"prep":["Griller les sardines.","Braiser le fenouil.","Servir avec le quinoa et le citron."],"tprep":"20 min","tcuis":"25 min","k":655,"p":46,"val":"655 kcal • 46 g protéines • 34 g glucides • 34 g lipides","anti":"","pourquoi":"Les sardines sont riches en oméga‑3, calcium et vitamine D.","conseil":"Grillez rapidement les sardines pour préserver leur chair.","astuce":"Privilégiez les petits poissons gras plusieurs fois par semaine."}]},{"jour":"Mercredi","theme":"Inspiré des Zones Bleues","repas":[{"type":"Petit-déjeuner","n":"Porridge d'avoine, fruits rouges et noix","i":["50 g de flocons d'avoine","250 ml de lait","100 g de fruits rouges","20 g de noix","Cannelle"],"prep":["Cuire l'avoine.","Ajouter les fruits et les noix.","Servir chaud."],"tprep":"10 min","tcuis":"8 min","k":430,"p":20,"val":"430 kcal • 20 g protéines • 48 g glucides • 17 g lipides","anti":"","pourquoi":"L'avoine et les noix apportent fibres et bons gras.","conseil":"Ajoutez les noix juste avant de servir.","astuce":"Consommez régulièrement des céréales complètes."},{"type":"Collation","n":"Raisins et pistaches","i":["150 g de raisins","20 g de pistaches"],"prep":["Servir."],"tprep":"","tcuis":"","k":210,"p":6,"val":"210 kcal • 6 g protéines • 26 g glucides • 10 g lipides","anti":"","pourquoi":"Association de polyphénols et de bons gras.","conseil":"Choisissez des pistaches non salées.","astuce":"Privilégiez les fruits entiers."},{"type":"Déjeuner","n":"Revithada (ragoût de pois chiches) et salade grecque","i":["180 g de pois chiches cuits","150 g de tomates","80 g de concombre","40 g de feta","15 ml d'huile d'olive","Oignon","Laurier","Citron"],"prep":["Préparer le ragoût.","Assembler la salade.","Servir ensemble."],"tprep":"20 min","tcuis":"60 min","k":640,"p":25,"val":"640 kcal • 25 g protéines • 58 g glucides • 30 g lipides","anti":"","pourquoi":"Les légumineuses sont un aliment emblématique des Zones Bleues.","conseil":"Laissez mijoter doucement.","astuce":"Prévoyez une journée sans viande chaque semaine."},{"type":"Collation","n":"Kéfir nature et kiwi","i":["250 ml de kéfir","1 kiwi"],"prep":["Servir frais."],"tprep":"","tcuis":"","k":190,"p":11,"val":"190 kcal • 11 g protéines • 22 g glucides • 6 g lipides","anti":"","pourquoi":"Le kéfir apporte des ferments et le kiwi de la vitamine C.","conseil":"Servir très frais.","astuce":"Intégrez régulièrement des aliments fermentés."},{"type":"Souper","n":"Truite grillée, épinards sautés et orge","i":["200 g de truite","180 g d'épinards","100 g d'orge cuit","10 ml d'huile d'olive","Ail","Citron"],"prep":["Griller la truite.","Sauter les épinards.","Servir avec l'orge."],"tprep":"20 min","tcuis":"20 min","k":620,"p":44,"val":"620 kcal • 44 g protéines • 40 g glucides • 28 g lipides","anti":"","pourquoi":"Poisson riche en oméga‑3, céréales complètes et légumes verts.","conseil":"Cuire la truite avec la peau.","astuce":"Consommez des légumes verts quotidiennement."}]},{"jour":"Jeudi","theme":"Inspiré des Zones Bleues (Crète, Ikaria, Sardaigne, Cilento)","repas":[{"type":"Petit-déjeuner","n":"Pain complet, avocat et œufs pochés","i":["2 tranches (70 g) de pain complet","1/2 avocat (80 g)","2 œufs","Poivre","Graines de sésame 5 g"],"prep":["Griller le pain.","Pocher les œufs.","Garnir avec l'avocat et les graines."],"tprep":"15 min","tcuis":"8 min","k":450,"p":22,"val":"450 kcal • 22 g protéines • 34 g glucides • 24 g lipides","anti":"","pourquoi":"Les céréales complètes, l'avocat et les œufs apportent fibres, protéines et bons gras.","conseil":"Pocher les œufs dans une eau légèrement vinaigrée.","astuce":"Privilégiez les graisses insaturées provenant des végétaux."},{"type":"Collation","n":"Orange et noisettes","i":["1 orange (180 g)","20 g de noisettes"],"prep":["Servir."],"tprep":"","tcuis":"","k":215,"p":5,"val":"215 kcal • 5 g protéines • 20 g glucides • 13 g lipides","anti":"","pourquoi":"La vitamine C et les oléagineux soutiennent une alimentation riche en antioxydants.","conseil":"Choisissez des noisettes nature.","astuce":"Mangez un fruit entier plutôt qu'un jus."},{"type":"Déjeuner","n":"Fasolada (soupe grecque aux haricots blancs)","i":["220 g de haricots blancs cuits","Carottes 80 g","Céleri 60 g","Tomates 150 g","Oignon 60 g","15 ml d'huile d'olive","Laurier","Origan"],"prep":["Faire revenir les légumes.","Ajouter les haricots et les tomates.","Laisser mijoter puis servir."],"tprep":"20 min","tcuis":"45 min","k":610,"p":24,"val":"610 kcal • 24 g protéines • 62 g glucides • 26 g lipides","anti":"","pourquoi":"Les légumineuses sont au cœur des régimes associés à une grande longévité.","conseil":"Ajoutez l'huile d'olive après cuisson pour préserver ses arômes.","astuce":"Prévoyez plusieurs repas végétariens chaque semaine."},{"type":"Collation","n":"Yogourt grec et grenade","i":["200 g de yogourt grec nature","80 g d'arilles de grenade"],"prep":["Mélanger et servir frais."],"tprep":"","tcuis":"","k":210,"p":20,"val":"210 kcal • 20 g protéines • 18 g glucides • 6 g lipides","anti":"","pourquoi":"Les produits fermentés et les fruits colorés apportent probiotiques et polyphénols.","conseil":"Utilisez une grenade bien mûre.","astuce":"Variez les fruits au fil des saisons."},{"type":"Souper","n":"Cabillaud méditerranéen, blettes sautées et riz complet","i":["200 g de cabillaud","180 g de blettes","100 g de riz complet cuit","10 ml d'huile d'olive","Ail","Citron","Persil"],"prep":["Cuire le cabillaud au four.","Sauter les blettes à l'ail.","Servir avec le riz complet."],"tprep":"20 min","tcuis":"25 min","k":620,"p":45,"val":"620 kcal • 45 g protéines • 42 g glucides • 24 g lipides","anti":"","pourquoi":"Le poisson maigre, les légumes verts et les céréales complètes favorisent une alimentation équilibrée.","conseil":"Ajoutez le persil frais juste avant de servir.","astuce":"Le poisson remplace avantageusement les viandes transformées."}]},{"jour":"Vendredi","theme":"Inspiré des Zones Bleues (Crète, Ikaria, Sardaigne, Cilento)","repas":[{"type":"Petit-déjeuner","n":"Muesli méditerranéen au yogourt","i":["250 g de yogourt grec nature","40 g de flocons d'avoine","20 g de noix","100 g de fraises","10 g de graines de chia"],"prep":["Mélanger le yogourt et l'avoine.","Ajouter les fraises, les noix et les graines de chia.","Servir immédiatement."],"tprep":"10 min","tcuis":"","k":445,"p":28,"val":"445 kcal • 28 g protéines • 36 g glucides • 20 g lipides","anti":"","pourquoi":"Les céréales complètes, les noix et les produits fermentés sont des piliers du régime méditerranéen.","conseil":"Ajoutez les fruits au dernier moment pour préserver leur texture.","astuce":"Consommez des aliments riches en fibres chaque matin."},{"type":"Collation","n":"Figues fraîches et noix","i":["2 figues fraîches (120 g)","20 g de noix"],"prep":["Servir ensemble."],"tprep":"","tcuis":"","k":210,"p":4,"val":"210 kcal • 4 g protéines • 23 g glucides • 12 g lipides","anti":"","pourquoi":"Les figues apportent fibres et antioxydants.","conseil":"Choisissez des fruits bien mûrs.","astuce":"Privilégiez les fruits frais comme dessert."},{"type":"Déjeuner","n":"Salade de lentilles, saumon fumé et roquette","i":["150 g de lentilles cuites","100 g de saumon fumé","60 g de roquette","120 g de tomates","80 g de concombre","15 ml d'huile d'olive","Citron"],"prep":["Mélanger tous les ingrédients.","Assaisonner avec l'huile d'olive et le citron."],"tprep":"20 min","tcuis":"","k":620,"p":36,"val":"620 kcal • 36 g protéines • 34 g glucides • 35 g lipides","anti":"","pourquoi":"Les légumineuses et les oméga‑3 favorisent une alimentation protectrice.","conseil":"Ajoutez le saumon juste avant de servir.","astuce":"Associez souvent poissons et légumineuses."},{"type":"Collation","n":"Kéfir et abricots","i":["250 ml de kéfir","2 abricots (120 g)"],"prep":["Servir bien frais."],"tprep":"","tcuis":"","k":195,"p":11,"val":"195 kcal • 11 g protéines • 22 g glucides • 6 g lipides","anti":"","pourquoi":"Les aliments fermentés soutiennent la diversité du microbiote.","conseil":"Utilisez des fruits de saison.","astuce":"Intégrez régulièrement des produits fermentés."},{"type":"Souper","n":"Poulet rôti aux herbes, ratatouille et épeautre","i":["180 g de poitrine de poulet","250 g de ratatouille","100 g d'épeautre cuit","10 ml d'huile d'olive","Romarin","Thym","Ail"],"prep":["Rôtir le poulet avec les herbes.","Réchauffer la ratatouille.","Servir avec l'épeautre."],"tprep":"20 min","tcuis":"30 min","k":630,"p":48,"val":"630 kcal • 48 g protéines • 42 g glucides • 22 g lipides","anti":"","pourquoi":"Les céréales anciennes et les légumes variés enrichissent l'alimentation.","conseil":"Laissez reposer le poulet avant de le trancher.","astuce":"Variez les céréales complètes au cours de la semaine."}]}]}];
+let menuRegimeIdx = 0;
+let menuRegimeJours = {};
+function renderMenusRegime(){
+  if(menuRegimeIdx >= MENUS_REGIME.length) menuRegimeIdx = 0;
+  const menu = MENUS_REGIME[menuRegimeIdx];
+  // sélecteur de menus
+  $("menuRegimeMenus").innerHTML = MENUS_REGIME.map((mn,i)=>
+    `<button type="button" class="${i===menuRegimeIdx?"active":""}" data-mi="${i}">${esc(mn.nom.replace(/^Menu( \d+)? — /,""))}</button>`).join("");
+  $("menuRegimeMenus").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    menuRegimeIdx = +b.dataset.mi; renderMenusRegime();
+  }));
+  // jour sélectionné pour ce menu
+  const dispo = menu.jours.map(j=>j.jour);
+  let jourSel = menuRegimeJours[menuRegimeIdx];
+  if(!jourSel || !dispo.includes(jourSel)){
+    const auj = JOURS_LMD[(new Date().getDay()+6)%7];
+    jourSel = dispo.includes(auj) ? auj : dispo[0];
+    menuRegimeJours[menuRegimeIdx] = jourSel;
+  }
+  $("menuRegimeDesc").innerHTML = `<b>${esc(menu.nom)}</b> — ${esc(menu.objectif)}.<br>${esc(menu.desc)}`;
+  $("menuRegimeTabs").innerHTML = JOURS_LMD.map(j=>{
+    const has = dispo.includes(j);
+    return `<button type="button" class="${j===jourSel?"active":""}" data-mj="${j}" ${has?"":'disabled style="opacity:.3"'} title="${has?"":"À venir"}">${j.slice(0,3)}</button>`;
+  }).join("");
+  $("menuRegimeTabs").querySelectorAll("button:not([disabled])").forEach(b=>b.addEventListener("click", ()=>{
+    menuRegimeJours[menuRegimeIdx] = b.dataset.mj; renderMenusRegime();
+  }));
+  const day = menu.jours.find(j=>j.jour===jourSel);
+  const total = day.repas.reduce((sm,r)=>sm+(r.k||0),0);
+  const totalP = day.repas.reduce((sm,r)=>sm+(r.p||0),0);
+  $("menuRegimeList").innerHTML = `
+    <p class="muted small" style="margin:4px 0 10px;">${day.theme?esc(day.theme)+" ":""}<b style="color:var(--accent)">Total du jour : ${total} kcal · ${totalP} g prot.</b></p>`
+    + day.repas.map((r,ri)=>`
+    <div class="meal">
+      <div class="mhead">
+        <div><div class="mtype">${esc(r.type)}</div><h4>${esc(r.n)}</h4></div>
+        <div class="kcal">${r.k} kcal${r.p?` · ${r.p} g prot.`:""}</div>
+      </div>
+      ${(r.tprep||r.tcuis)?`<div class="muted small" style="margin-top:4px;">${r.tprep?"⏱️ Préparation : "+esc(r.tprep):""}${r.tcuis?" · 🔥 Cuisson : "+esc(r.tcuis):""}</div>`:""}
+      <ul>${r.i.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="prep">${r.prep.map((x,i2)=>r.prep.length>1?`${i2+1}. ${esc(x)}`:esc(x)).join(" ")}</div>
+      <div class="muted small" style="margin-top:6px;">${esc(r.val)}</div>
+      ${r.anti?`<div class="muted small" style="margin-top:4px;">🌿 <b>Anti-inflammatoires :</b> ${esc(r.anti)}</div>`:""}
+      ${r.pourquoi?`<div class="muted small" style="margin-top:4px;">💚 ${esc(r.pourquoi)}</div>`:""}
+      ${r.conseil?`<div class="muted small" style="margin-top:4px;">👨‍🍳 <b>Conseil du chef :</b> ${esc(r.conseil)}</div>`:""}
+      ${r.astuce?`<div class="muted small" style="margin-top:4px;">🌱 <b>Astuce longévité :</b> ${esc(r.astuce)}</div>`:""}
+      <button type="button" class="eat-btn" data-mrj="${ri}">➕ Au journal du jour (${r.k} kcal)</button>
+    </div>`).join("");
+  $("menuRegimeList").querySelectorAll("[data-mrj]").forEach(b=>b.addEventListener("click", ()=>{
+    const r = day.repas[+b.dataset.mrj];
+    jourData(todayKey()).extra.push({n:r.n, k:r.k});
+    save();
+    b.textContent = "✔ Ajouté au journal"; b.classList.add("eaten");
+    setTimeout(()=>{ b.textContent = `➕ Au journal du jour (${r.k} kcal)`; b.classList.remove("eaten"); }, 1800);
+  }));
+}
+
+
+/* ════════════════════════════════ MES RECETTES (sections personnalisées) ════════════════════════════════ */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function mesRecettes(){ if(!S.recettes) S.recettes = []; return S.recettes; }
+let secOuverte = null;
+
+function renderSections(){
+  const list = mesRecettes();
+  $("secList").innerHTML = list.length ? list.map((sec,si)=>`
+    <div class="wday ${secOuverte===si?"open":""}">
+      <div class="whead" data-sechead="${si}">
+        <h4>📂 ${esc(sec.nom)} <span class="muted small">— ${sec.items.length} recette${sec.items.length>1?"s":""}</span></h4>
+        <button class="del" data-secdel="${si}" title="Supprimer la section">✕</button>
+      </div>
+      <div class="wbody">
+        ${sec.items.map((r,ri)=>`
+          <div class="meal">
+            <div class="mhead">
+              <div><h4>${esc(r.n)}</h4></div>
+              <div class="kcal">${r.k} kcal${r.p?` · ${r.p} g prot.`:""}</div>
+            </div>
+            ${r.i ? `<ul>${r.i.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+            ${r.prep ? `<div class="prep">${esc(r.prep)}</div>` : ""}
+            <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+              <button type="button" class="eat-btn" data-secjournal="${si}:${ri}">➕ Au journal du jour</button>
+              <button type="button" class="del" data-secrdel="${si}:${ri}" title="Supprimer la recette">✕</button>
+            </div>
+          </div>`).join("") || `<p class="muted small">Section vide — ajoute ta première recette ci-dessous.</p>`}
+        <h3>➕ Nouvelle recette dans « ${esc(sec.nom)} »</h3>
+        <input data-rn="${si}" type="text" placeholder="Nom de la recette" maxlength="80">
+        <div class="row2" style="margin-top:8px;">
+          <input data-rk="${si}" type="number" placeholder="Calories (kcal)" min="0" max="4000">
+          <input data-rp="${si}" type="number" placeholder="Protéines (g, optionnel)" min="0" max="300">
+        </div>
+        <textarea data-ri="${si}" rows="3" placeholder="Ingrédients (un par ligne)" style="margin-top:8px;"></textarea>
+        <textarea data-rprep="${si}" rows="2" placeholder="Préparation (optionnel)" style="margin-top:8px;"></textarea>
+        <button type="button" class="btn secondary" data-radd="${si}">Ajouter la recette</button>
+      </div>
+    </div>`).join("")
+    : `<p class="muted small">Aucune section pour l'instant — crée la première ci-dessus.</p>`;
+
+  // ouvrir / fermer une section (sauf clic sur ✕)
+  $("secList").querySelectorAll("[data-sechead]").forEach(h=>h.addEventListener("click", e=>{
+    if(e.target.closest("[data-secdel]")) return;
+    const si = +h.dataset.sechead;
+    secOuverte = secOuverte===si ? null : si;
+    renderSections();
+  }));
+  $("secList").querySelectorAll("[data-secdel]").forEach(b=>b.addEventListener("click", ()=>{
+    const si = +b.dataset.secdel;
+    const sec = mesRecettes()[si];
+    if(confirm(`Supprimer la section « ${sec.nom} » et ses ${sec.items.length} recette(s) ?`)){
+      mesRecettes().splice(si,1);
+      if(secOuverte===si) secOuverte = null;
+      save(); renderSections();
+    }
+  }));
+  $("secList").querySelectorAll("[data-secrdel]").forEach(b=>b.addEventListener("click", ()=>{
+    const [si,ri] = b.dataset.secrdel.split(":").map(Number);
+    mesRecettes()[si].items.splice(ri,1);
+    save(); renderSections();
+  }));
+  $("secList").querySelectorAll("[data-secjournal]").forEach(b=>b.addEventListener("click", ()=>{
+    const [si,ri] = b.dataset.secjournal.split(":").map(Number);
+    const r = mesRecettes()[si].items[ri];
+    jourData(todayKey()).extra.push({n:r.n, k:r.k});
+    save();
+    b.textContent = "✔ Ajouté au journal";
+    b.classList.add("eaten");
+    setTimeout(()=>{ b.textContent = "➕ Au journal du jour"; b.classList.remove("eaten"); }, 1800);
+  }));
+  $("secList").querySelectorAll("[data-radd]").forEach(b=>b.addEventListener("click", ()=>{
+    const si = +b.dataset.radd;
+    const g = a => $("secList").querySelector(`[data-${a}="${si}"]`);
+    const n = g("rn").value.trim();
+    const k = Math.round(+g("rk").value);
+    if(!n){ alert("Donne un nom à la recette."); return; }
+    if(!k || k<=0 || k>4000){ alert("Entre les calories de la recette."); return; }
+    const item = {n, k};
+    const p = Math.round(+g("rp").value);
+    if(p>0) item.p = p;
+    const ing = g("ri").value.trim();
+    if(ing) item.i = ing;
+    const prep = g("rprep").value.trim();
+    if(prep) item.prep = prep;
+    mesRecettes()[si].items.push(item);
+    save(); renderSections();
+  }));
+}
+$("secAdd").addEventListener("click", ()=>{
+  const nom = $("secNom").value.trim();
+  if(!nom){ alert("Donne un nom à la section (ex. : Smoothies, Desserts protéinés…)."); return; }
+  if(mesRecettes().some(s=>s.nom.toLowerCase()===nom.toLowerCase())){ alert("Cette section existe déjà."); return; }
+  mesRecettes().push({nom, items:[]});
+  secOuverte = mesRecettes().length-1;
+  $("secNom").value = "";
+  save(); renderSections();
+});
+
+/* ════════════════════════════════ ENTRAÎNEMENT ════════════════════════════════ */
+function seanceKey(dow){
+  // clé unique par semaine ISO approximative : lundi de la semaine courante + jour
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7));
+  return monday.toISOString().slice(0,10) + "#" + dow;
+}
+function seanceHTML(s, dow, todayFlag){
+  const key = seanceKey(dow);
+  const done = !!S.seances[key];
+  const tagCls = s.t==="muscu"?"muscu":s.t==="cardio"?"cardio":"repos";
+  const tagTxt = s.t==="muscu"?"Musculation":s.t==="cardio"?"Cardio":"Repos";
+  return `
+    <div class="wday ${todayFlag?"open":""}">
+      <div class="whead" onclick="this.parentElement.classList.toggle('open')">
+        <h4>${todayFlag?"Aujourd'hui":JOURS_LMD[dow]} — ${s.n}</h4>
+        <span class="tag ${tagCls}">${tagTxt}</span>
+      </div>
+      <div class="wbody">
+        ${s.ex.length ? `<table>${s.ex.map(e=>`<tr><td>${e[0]}</td><td style="text-align:right">${e[1]}</td></tr>`).join("")}</table>`
+          : `<p class="muted small">Aucun exercice défini — bâtis cette séance dans l'onglet Sport (🛠️ Mon programme).</p>`}
+        ${s.t!=="repos" ? `
+        <label class="done-check">
+          <input type="checkbox" data-skey="${key}" ${done?"checked":""}>
+          Séance complétée ✔
+        </label>` : ""}
+      </div>
+    </div>`;
+}
+function bindSeanceChecks(){
+  document.querySelectorAll('input[data-skey]').forEach(ch=>{
+    ch.onchange = ()=>{
+      if(ch.checked) S.seances[ch.dataset.skey] = todayKey();
+      else delete S.seances[ch.dataset.skey];
+      save();
+    };
+  });
+}
+function renderTraining(){
+  const p = S.profil; if(!p) return;
+  const k = progKey();
+  const info = PROG_INFO[k] || PROG_INFO[p.objectif];
+  $("t-goal").textContent = info.label;
+  $("t-desc").textContent = info.desc;
+  $("progSelect").value = p.programme || "auto";
+  const dow = (new Date().getDay()+6)%7;
+  $("trainingList").innerHTML = progSessions().map((s,i)=>seanceHTML(s,i,i===dow)).join("");
+  bindSeanceChecks();
+  renderCustomEditor(k === "custom");
+}
+$("progSelect").addEventListener("change", ()=>{
+  S.profil.programme = $("progSelect").value;
+  save();
+  renderTraining();
+});
+/* ─── Éditeur du programme personnalisé ─── */
+function renderCustomEditor(showIt){
+  const ed = $("customEditor");
+  ed.hidden = !showIt;
+  if(!showIt){ ed.innerHTML=""; return; }
+  const data = S.custom || CUSTOM_DEFAUT;
+  ed.innerHTML = `
+    <p class="muted small">Un exercice par ligne, au format <b>Nom | séries × reps</b> (ex. : <i>Squat | 4 × 10</i>).</p>
+    ${JOURS_LMD.map((j,i)=>{
+      const d = data[i] || {t:"repos", n:"", ex:[]};
+      return `
+      <div class="meal" style="margin-top:10px;">
+        <div class="row2">
+          <div>
+            <label>${j} — type</label>
+            <select data-ct="${i}">
+              <option value="muscu" ${d.t==="muscu"?"selected":""}>Musculation</option>
+              <option value="cardio" ${d.t==="cardio"?"selected":""}>Cardio</option>
+              <option value="repos" ${d.t==="repos"?"selected":""}>Repos</option>
+            </select>
+          </div>
+          <div>
+            <label>Nom de la séance</label>
+            <input type="text" data-cn="${i}" value="${(d.n||"").replace(/"/g,"&quot;")}" placeholder="Ex. : Push, HIIT vélo…">
+          </div>
+        </div>
+        <label>Exercices</label>
+        <textarea data-cx="${i}" rows="4" placeholder="Développé couché | 4 × 8&#10;Rowing barre | 4 × 10">${(d.ex||[]).map(e=>e[1]?e[0]+" | "+e[1]:e[0]).join("\n")}</textarea>
+      </div>`;
+    }).join("")}
+    <button class="btn" id="customSave" type="button">💾 Enregistrer mon programme</button>`;
+  $("customSave").addEventListener("click", ()=>{
+    S.custom = JOURS_LMD.map((_,i)=>{
+      const t = ed.querySelector(`[data-ct="${i}"]`).value;
+      const n = ed.querySelector(`[data-cn="${i}"]`).value.trim() || (t==="repos"?"Repos":"Séance");
+      const ex = ed.querySelector(`[data-cx="${i}"]`).value.split("\n")
+        .map(l=>l.trim()).filter(Boolean)
+        .map(l=>{ const parts = l.split("|").map(x=>x.trim()); return [parts[0], parts[1]||""]; });
+      return {t, n, ex};
+    });
+    save();
+    renderTraining();
+  });
+}
+
+/* ════════════════════════════════ EAU / PAS ════════════════════════════════ */
+$("eauPlus").addEventListener("click", ()=>{ jourData(todayKey()).eau += 250; save(); renderDash(); });
+$("eauMoins").addEventListener("click", ()=>{ const j=jourData(todayKey()); j.eau=Math.max(0,j.eau-250); save(); renderDash(); });
+$("pasSave").addEventListener("click", ()=>{
+  const v = +$("pasInput").value;
+  if(v>=0 && v<100000){ jourData(todayKey()).pas = v; save(); $("pasInput").value=""; renderDash(); }
+});
+
+/* ════════════════════════════════ SUIVI POIDS ════════════════════════════════ */
+let pendingWeigh = null;
+
+$("poidsSave").addEventListener("click", ()=>{
+  const kg = +$("poidsInput").value;
+  if(!kg || kg<35 || kg>300){ alert("Entre un poids valide."); return; }
+  const gras = +$("grasInput").value;
+  pendingWeigh = {d:todayKey(), kg};
+  if(gras >= 3 && gras <= 60) pendingWeigh.gras = Math.round(gras*10)/10;
+  const verdict = analyseTendance(kg);
+  if(verdict && verdict.level!=="ok"){
+    openReasonModal(verdict);
+  } else {
+    commitWeigh(null, "");
+  }
+  $("poidsInput").value=""; $("grasInput").value="";
+});
+
+function commitWeigh(raisons, note){
+  if(!pendingWeigh) return;
+  const existing = S.poids.find(e=>e.d===pendingWeigh.d);
+  if(existing){ existing.kg = pendingWeigh.kg; if(pendingWeigh.gras) existing.gras = pendingWeigh.gras; if(raisons) existing.raisons=raisons; if(note) existing.note=note; }
+  else {
+    const e = {...pendingWeigh};
+    if(raisons && raisons.length) e.raisons = raisons;
+    if(note) e.note = note;
+    S.poids.push(e);
+    S.poids.sort((a,b)=>a.d.localeCompare(b.d));
+  }
+  pendingWeigh = null;
+  save();
+  renderSuivi();
+}
+
+/* Analyse : compare le rythme réel des ~14 derniers jours au rythme attendu. */
+function analyseTendance(newKg){
+  const p = S.profil; if(!p) return null;
+  const all = [...S.poids.filter(e=>e.d!==todayKey()), {d:todayKey(), kg:newKg}];
+  if(all.length < 2) return {level:"ok"};
+  const last = all[all.length-1];
+  // point de référence : la pesée la plus ancienne dans les 14 derniers jours
+  const limit = new Date(); limit.setDate(limit.getDate()-14);
+  const window14 = all.filter(e => new Date(e.d) >= limit);
+  const ref = window14.length >= 2 ? window14[0] : all[all.length-2];
+  const days = Math.max(1, (new Date(last.d) - new Date(ref.d)) / 86400000);
+  const rate = (last.kg - ref.kg) / days * 7; // kg / semaine réel
+  const target = calc().rate; // rythme du plan (période choisie ou objectif)
+
+  if(target < 0){ // perte
+    if(rate > -0.15) return {level:"warn", rate, target,
+      msg:`Ton poids stagne ou remonte (${rate>=0?"+":""}${fmt1(rate)} kg/sem. au lieu de ${fmt1(target)}).`};
+    if(rate < target*2.2) return {level:"fast", rate, target,
+      msg:`Tu perds très vite (${fmt1(rate)} kg/sem.). Trop rapide = perte de muscle et fatigue.`};
+    return {level:"ok", rate, target};
+  }
+  if(target > 0){ // prise
+    if(rate < 0.05) return {level:"warn", rate, target,
+      msg:`Ta prise de poids stagne (${fmt1(rate)} kg/sem. au lieu de +${fmt1(target)}).`};
+    if(rate > target*2.2) return {level:"fast", rate, target,
+      msg:`Tu prends très vite (+${fmt1(rate)} kg/sem.) — risque de gras superflu.`};
+    return {level:"ok", rate, target};
+  }
+  // maintien / recomposition
+  if(Math.abs(rate) > 0.5) return {level:"warn", rate, target,
+    msg:`Ton poids bouge de ${rate>0?"+":""}${fmt1(rate)} kg/sem. alors que tu vises la stabilité.`};
+  return {level:"ok", rate, target};
+}
+
+/* ─── Modal raisons ─── */
+let selReasons = [];
+let pendingVerdict = null;
+function openReasonModal(verdict){
+  pendingVerdict = verdict;
+  selReasons = [];
+  $("reasonIntro").textContent = verdict.msg + " Sélectionne la ou les raisons probables pour recevoir des corrections ciblées :";
+  $("reasonChips").innerHTML = Object.keys(RAISONS).map(r=>`<button type="button" class="chip">${r}</button>`).join("");
+  $("reasonChips").querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
+    ch.classList.toggle("sel");
+    const t = ch.textContent;
+    selReasons = ch.classList.contains("sel") ? [...selReasons, t] : selReasons.filter(x=>x!==t);
+  }));
+  $("reasonNote").value="";
+  $("reasonModal").classList.add("show");
+}
+$("reasonSave").addEventListener("click", ()=>{
+  $("reasonModal").classList.remove("show");
+  commitWeigh(selReasons, $("reasonNote").value.trim());
+});
+$("reasonSkip").addEventListener("click", ()=>{
+  $("reasonModal").classList.remove("show");
+  commitWeigh(null, "");
+});
+
+/* ─── Rendu suivi ─── */
+function renderSuivi(){
+  const c = calc(); if(!c) return;
+  const p = S.profil;
+
+  // analyse affichée en permanence
+  let html = "";
+  if(S.poids.length >= 2){
+    const last = S.poids[S.poids.length-1];
+    const v = analyseTendance(last.kg);
+    if(v.level==="ok"){
+      html = `<div class="alert ok"><b>✅ Sur la bonne voie</b>Rythme actuel : ${v.rate!==undefined?(v.rate>0?"+":"")+fmt1(v.rate)+" kg/sem.":"—"} — continue exactement comme ça.</div>`;
+    } else if(v.level==="fast"){
+      html = `<div class="alert warn"><b>⚡ ${v.msg}</b><ul>
+        <li>${c.rate<0 ? "Ajoute 150-200 kcal/jour (ex. : 1 collation protéinée) pour protéger ton muscle et ton énergie." : "Réduis d'environ 150 kcal/jour pour limiter la prise de gras."}</li>
+        <li>Garde tes séances de musculation — c'est ce qui dirige le poids au bon endroit.</li></ul></div>`;
+    } else {
+      const last = S.poids[S.poids.length-1];
+      const reasons = last.raisons || [];
+      const corr = reasons.length
+        ? reasons.flatMap(r => (RAISONS[r]||[]).map(s=>`<li><b style="display:inline">${r} :</b> ${s}</li>`))
+        : [`<li>Réduis de 100-150 kcal/jour ou ajoute 2 000 pas quotidiens.</li>`,
+           `<li>Vérifie huiles, sauces, collations et boissons — les calories « oubliées » sont la cause n° 1.</li>`];
+      html = `<div class="alert bad"><b>🔎 ${v.msg}</b>
+        ${reasons.length?`<span class="small muted">Raisons notées : ${reasons.join(", ")}.</span>`:""}
+        <ul>${corr.join("")}</ul></div>`;
+      // modifications recommandées selon le programme choisi
+      const pk = progKey();
+      const tr = (RECO_TRAIN[pk] || RECO_TRAIN.custom).map(x=>`<li>🏋️ ${x}</li>`);
+      const nu = (c.rate > 0 ? RECO_NUTRI.gainDir : RECO_NUTRI.perteDir).slice(0,2).map(x=>`<li>${x}</li>`);
+      html += `<div class="alert warn"><b>🔧 Modifications recommandées — programme ${(PROG_INFO[pk]||PROG_INFO[p.objectif]).label}</b>
+        <ul>${nu.join("")}${tr.join("")}</ul>
+        <span class="small muted">Applique UNE modification à la fois et redonne-toi 2 semaines avant d'en juger l'effet.</span></div>`;
+    }
+  } else {
+    html = `<div class="alert ok"><b>👋 Première pesée enregistrée</b>Pèse-toi 2-3 fois par semaine, le matin à jeun, pour que l'analyse devienne fiable.</div>`;
+  }
+  $("analyse").innerHTML = html + analyseGrasHTML(c);
+
+  renderAlertes(c);
+  drawChart();
+
+  // liste
+  const list = [...S.poids].reverse();
+  $("poidsList").innerHTML = list.length ? list.map((e,i)=>{
+    const idx = S.poids.indexOf(e);
+    const prev = idx>0 ? S.poids[idx-1].kg : null;
+    const d = prev===null ? null : e.kg - prev;
+    const cls = d===null ? "flat" : d<0 ? "down" : d>0 ? "up" : "flat";
+    const arrow = d===null ? "" : (d<0?"▼ ":d>0?"▲ ":"＝ ") + fmt1(Math.abs(d)) + " kg";
+    return `<div class="entry">
+      <div>
+        <div><b>${fmt1(e.kg)} kg</b> <span class="delta ${cls}">${arrow}</span>${e.gras?` <span class="muted small">· 🧈 ${fmt1(e.gras)} %</span>`:""}</div>
+        <div class="d">${new Date(e.d+"T12:00").toLocaleDateString("fr-CA",{weekday:"short",day:"numeric",month:"short"})}</div>
+        ${e.raisons?`<div class="reason">⚠ ${e.raisons.join(", ")}</div>`:""}
+        ${e.note?`<div class="reason" style="color:var(--muted)">📝 ${e.note}</div>`:""}
+      </div>
+      <button class="del" data-i="${idx}" title="Supprimer">✕</button>
+    </div>`;
+  }).join("") : `<p class="muted">Aucune pesée pour l'instant.</p>`;
+  $("poidsList").querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{
+    S.poids.splice(+b.dataset.i,1); save(); renderSuivi();
+  }));
+
+  // stats 7 jours
+  let pasT=0, eauT=0, n=0;
+  for(let i=0;i<7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    if(S.jours[k]){ pasT+=S.jours[k].pas; eauT+=S.jours[k].eau; n++; }
+  }
+  $("s-pas-moy").textContent = n? Math.round(pasT/n).toLocaleString("fr-CA") : "–";
+  $("s-eau-moy").textContent = n? fmt1(eauT/n/1000)+" L" : "–";
+  const monday = new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
+  const wk = monday.toISOString().slice(0,10);
+  $("s-seances").textContent = Object.keys(S.seances).filter(k=>k.startsWith(wk)).length;
+  $("s-streak").textContent = calcStreak();
+
+  drawBars($("barsPas"), "pas", c.g.pas, v=>Math.round(v/1000)+"k");
+  drawBars($("barsEau"), "eau", c.eauL*1000, v=>fmt1(v/1000)+" L");
+}
+
+/* ─── Analyse de composition corporelle : évolution muscle vs gras entre deux mesures ─── */
+function analyseGrasHTML(c){
+  const mesures = S.poids.filter(e=>e.gras);
+  if(mesures.length === 0){
+    return `<div class="alert warn"><b>🧈 % de gras non mesuré</b>Ton % actuel est estimé à ${fmt1(c.gras)} % (formule Deurenberg) — cible : ${fmt1(c.grasCible)} %. Mesure-le chaque lundi avec ta pesée (balance à impédance ou pince) pour une analyse muscle vs gras précise.</div>`;
+  }
+  const last = mesures[mesures.length-1];
+  let html = "";
+  // objectif de % de gras atteint ?
+  const versLeBas = c.grasCible <= (S.profil.gras || last.gras);
+  if((versLeBas && last.gras <= c.grasCible) || (!versLeBas && last.gras >= c.grasCible)){
+    html += `<div class="alert ok"><b>🎉 Objectif de % de gras atteint !</b>${fmt1(last.gras)} % vs cible de ${fmt1(c.grasCible)} %. Passe en maintien ou fixe une nouvelle cible dans Profil.</div>`;
+  }
+  if(mesures.length < 2){
+    return html + `<div class="alert ok"><b>🧈 Première mesure enregistrée : ${fmt1(last.gras)} %</b>Cible : ${fmt1(c.grasCible)} %${c.grasCibleAuto?" (recommandée selon ton but 🤖)":""}. Refais la mesure chaque lundi matin, même conditions, pour suivre l'évolution muscle vs gras.</div>`;
+  }
+  // composition : comparer les 2 dernières mesures
+  const a = mesures[mesures.length-2], b = last;
+  const lbmA = a.kg*(1-a.gras/100), lbmB = b.kg*(1-b.gras/100);
+  const dM = lbmB - lbmA;               // Δ masse maigre (muscle)
+  const dF = (b.kg-lbmB) - (a.kg-lbmA); // Δ masse grasse
+  const compo = `Entre le ${new Date(a.d+"T12:00").toLocaleDateString("fr-CA",{day:"numeric",month:"short"})} et le ${new Date(b.d+"T12:00").toLocaleDateString("fr-CA",{day:"numeric",month:"short"})} : <b>muscle ${dM>=0?"+":""}${fmt1(dM)} kg</b>, <b>gras ${dF>=0?"+":""}${fmt1(dF)} kg</b>.`;
+
+  if(c.rate < 0){ // phase de perte / sèche
+    if(dM <= -0.4){
+      html += `<div class="alert bad"><b>⚠️ Tu perds du muscle, pas seulement du gras</b>${compo}<ul>
+        <li>🍽️ Monte les protéines : vise ${c.prot} g/jour, répartis sur chaque repas.</li>
+        <li>🍽️ Ralentis le déficit : ajoute 150 kcal/jour.</li>
+        <li>🏋️ Garde des charges lourdes en musculation — c'est le signal qui dit au corps de conserver le muscle.</li>
+        <li>😴 Dors 7-8 h : le manque de sommeil fait fondre le muscle en déficit.</li></ul></div>`;
+    } else if(dF < -0.1){
+      html += `<div class="alert ok"><b>💪 Perte propre : le gras part, le muscle reste</b>${compo} C'est exactement le but — continue tel quel.</div>`;
+    } else {
+      html += `<div class="alert warn"><b>🧈 Gras stable sur les 2 dernières mesures</b>${compo} Les mesures d'impédance varient beaucoup : refais-la lundi matin à jeun, même conditions, avant de changer quoi que ce soit.</div>`;
+    }
+  } else if(c.rate > 0){ // prise de masse
+    if(dF > 0.4 && dF > dM){
+      html += `<div class="alert warn"><b>⚠️ Ta prise est trop grasse</b>${compo}<ul>
+        <li>🍽️ Réduis le surplus de 150-200 kcal/jour.</li>
+        <li>🏋️ Vérifie ta surcharge progressive : sans progression aux charges, le surplus devient du gras.</li>
+        <li>👟 Ajoute 2 000 pas quotidiens pour tamponner le surplus.</li></ul></div>`;
+    } else {
+      html += `<div class="alert ok"><b>💪 Prise propre : le muscle monte plus vite que le gras</b>${compo} Continue, c'est une prise de masse réussie.</div>`;
+    }
+  } else { // recomposition / maintien
+    if(dM > 0.1 && dF < -0.1){
+      html += `<div class="alert ok"><b>🏆 Recomposition parfaite : +muscle, −gras à poids stable</b>${compo}</div>`;
+    } else {
+      html += `<div class="alert ok"><b>🧈 Composition suivie</b>${compo} En recomposition, les changements sont lents : juge sur 4-6 semaines.</div>`;
+    }
+  }
+  return html;
+}
+
+/* ─── Alertes de routine : entraînements sautés, pas, eau, repas, pesée du lundi ─── */
+function renderAlertes(c){
+  const p = S.profil;
+  const out = [];
+  const today = new Date();
+
+  // pesée hebdomadaire (chaque lundi matin)
+  const monday = new Date(today); monday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const mondayK = monday.toISOString().slice(0,10);
+  if(!S.poids.some(e=>e.d >= mondayK)){
+    out.push({lvl: today.getDay()===1 ? "warn" : "bad",
+      txt:`<b>⚖️ Pesée du lundi ${today.getDay()===1?"attendue aujourd'hui":"manquée cette semaine"}</b>Pèse-toi le matin à jeun, après la toilette — même moment chaque semaine pour comparer du pareil au pareil.`});
+  }
+
+  // conformité des 7 derniers jours (hors aujourd'hui, à partir du début du programme)
+  let sk = 0, pasMiss = 0, eauMiss = 0, repasMiss = 0, n = 0;
+  for(let i=1; i<=7; i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    if(p.debut && k < p.debut) continue;
+    n++;
+    const s = progSessions()[(d.getDay()+6)%7];
+    if(s.t !== "repos" && !S.seances[seanceKeyFor(d)]) sk++;
+    const j = S.jours[k];
+    if(!j || j.pas < c.g.pas) pasMiss++;
+    if(!j || j.eau < c.eauL*1000) eauMiss++;
+    const eaten = j && j.mange ? c.struct.meals.filter(m=>j.mange[m]).length : 0;
+    if(eaten < c.struct.meals.length) repasMiss++;
+  }
+  if(n > 0){
+    if(sk > 0) out.push({lvl: sk>=2?"bad":"warn",
+      txt:`<b>🏋️ ${sk} entraînement${sk>1?"s":""} sauté${sk>1?"s":""} sur les 7 derniers jours</b>Reprends dès la prochaine séance prévue à ${routineTimes().times.sport||"17:00"} — sans doubler. Si le temps manque, une version courte de 20 min vaut 100 × mieux que rien.`});
+    if(pasMiss >= 3) out.push({lvl: pasMiss>=5?"bad":"warn",
+      txt:`<b>👟 Objectif de ${c.g.pas.toLocaleString("fr-CA")} pas manqué ${pasMiss} jours sur ${n}</b>Ajoute 2 marches de 15 min (matin et soir) — c'est ~2 500 pas de plus sans y penser.`});
+    if(eauMiss >= 3) out.push({lvl:"warn",
+      txt:`<b>💧 Objectif d'eau (${fmt1(c.eauL)} L) manqué ${eauMiss} jours sur ${n}</b>Remplis ta bouteille dès le matin et suis les 3 jalons de ta routine (10 h, 15 h, 20 h).`});
+    if(repasMiss >= 3) out.push({lvl:"warn",
+      txt:`<b>🍽️ Repas du plan non complétés ${repasMiss} jours sur ${n}</b>Coche chaque repas dans le journal aux heures de ta routine — ce qui n'est pas suivi n'est pas géré.`});
+  }
+
+  $("alertes").innerHTML = out.length
+    ? out.map(a=>`<div class="alert ${a.lvl}">${a.txt}</div>`).join("")
+    : `<div class="alert ok"><b>✅ Routine respectée</b>Aucune alerte : entraînements, pas, eau, repas et pesée sont dans les clous. C'est exactement comme ça qu'on atteint un objectif.</div>`;
+}
+
+/* Jours actifs consécutifs (pesée, pas, eau, repas coché ou séance faite) */
+function calcStreak(){
+  const seanceDays = new Set(Object.values(S.seances));
+  const poidsDays = new Set(S.poids.map(e=>e.d));
+  let streak = 0;
+  for(let i=0;i<365;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    const j = S.jours[k];
+    const actif = (j && (j.pas>0 || j.eau>0 || (j.mange&&(j.mange.dej||j.mange.din)) || (j.extra&&j.extra.length)))
+      || seanceDays.has(k) || poidsDays.has(k);
+    if(actif) streak++;
+    else if(i===0) continue; // la journée en cours peut ne pas encore être remplie
+    else break;
+  }
+  return streak;
+}
+
+/* Graphique à barres : 14 derniers jours d'un champ journalier vs objectif */
+function drawBars(svg, field, target, fmtV){
+  const W=640, H=170, mL=8, mR=8, mB=22, mT=18;
+  const days = [];
+  for(let i=13;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = d.toISOString().slice(0,10);
+    days.push({d, v:(S.jours[k]&&S.jours[k][field])||0});
+  }
+  const maxV = Math.max(target, ...days.map(x=>x.v)) * 1.1;
+  const bw = (W-mL-mR)/14;
+  let out = "";
+  const yT = mT + (1-target/maxV)*(H-mT-mB);
+  out += `<line x1="${mL}" y1="${yT}" x2="${W-mR}" y2="${yT}" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+  out += `<text x="${W-mR}" y="${yT-4}" fill="#fbbf24" font-size="10" text-anchor="end">Objectif ${fmtV(target)}</text>`;
+  days.forEach((x,i)=>{
+    const h = x.v>0 ? Math.max(3,(x.v/maxV)*(H-mT-mB)) : 0;
+    const cx = mL + i*bw;
+    const ok = x.v >= target;
+    if(h>0) out += `<rect x="${cx+3}" y="${H-mB-h}" width="${bw-6}" height="${h}" rx="4" fill="${ok?"#34d399":"#2e4a6b"}"/>`;
+    else out += `<rect x="${cx+3}" y="${H-mB-2}" width="${bw-6}" height="2" rx="1" fill="#2c3750"/>`;
+    const lbl = x.d.toLocaleDateString("fr-CA",{day:"numeric"});
+    out += `<text x="${cx+bw/2}" y="${H-6}" fill="#93a0b8" font-size="10" text-anchor="middle">${lbl}</text>`;
+  });
+  svg.innerHTML = out;
+}
+
+/* ─── Graphique SVG : poids réel + trajectoire prévue ─── */
+function drawChart(){
+  const svg = $("chart");
+  const p = S.profil;
+  if(!p || S.poids.length===0){ svg.innerHTML=""; return; }
+  const rate = calc().rate; // rythme du plan
+  const W=640, H=260, mL=44, mR=14, mT=14, mB=28;
+
+  const first = S.poids[0];
+  const start = new Date(first.d);
+  const lastD = new Date(S.poids[S.poids.length-1].d);
+  // trajectoire prévue jusqu'à la cible (ou +8 semaines si maintien)
+  const diff = first.kg - p.cible;
+  let endDate;
+  if(rate!==0 && ((rate<0&&diff>0)||(rate>0&&diff<0))){
+    endDate = new Date(start.getTime() + Math.abs(diff/rate)*7*86400000);
+  } else {
+    endDate = new Date(Math.max(lastD.getTime(), start.getTime()) + 56*86400000);
+  }
+  if(endDate < lastD) endDate = lastD;
+  const span = Math.max(1, endDate - start);
+
+  const kgVals = S.poids.map(e=>e.kg).concat([p.cible, first.kg]);
+  let kMin = Math.min(...kgVals)-1, kMax = Math.max(...kgVals)+1;
+
+  const X = d => mL + ( (new Date(d)-start)/span ) * (W-mL-mR);
+  const Y = kg => mT + (1-(kg-kMin)/(kMax-kMin)) * (H-mT-mB);
+
+  let out = "";
+  // grille horizontale
+  for(let i=0;i<=4;i++){
+    const kg = kMin + (kMax-kMin)*i/4;
+    const y = Y(kg);
+    out += `<line x1="${mL}" y1="${y}" x2="${W-mR}" y2="${y}" stroke="#2c3750" stroke-width="1"/>`;
+    out += `<text x="${mL-6}" y="${y+4}" fill="#93a0b8" font-size="11" text-anchor="end">${fmt1(kg)}</text>`;
+  }
+  // ligne cible
+  const yc = Y(p.cible);
+  out += `<line x1="${mL}" y1="${yc}" x2="${W-mR}" y2="${yc}" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="2 4"/>`;
+  out += `<text x="${W-mR}" y="${yc-5}" fill="#fbbf24" font-size="11" text-anchor="end">Objectif ${fmt1(p.cible)} kg</text>`;
+  // trajectoire prévue
+  const projEndKg = rate!==0 ? p.cible : first.kg;
+  out += `<line x1="${X(first.d)}" y1="${Y(first.kg)}" x2="${X(endDate)}" y2="${Y(projEndKg)}" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>`;
+  // courbe réelle
+  if(S.poids.length>1){
+    const pts = S.poids.map(e=>`${X(e.d)},${Y(e.kg)}`).join(" ");
+    out += `<polyline points="${pts}" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round"/>`;
+  }
+  S.poids.forEach(e=>{
+    out += `<circle cx="${X(e.d)}" cy="${Y(e.kg)}" r="4" fill="#34d399" stroke="#0f1420" stroke-width="2"/>`;
+  });
+  // courbe % de gras (échelle propre)
+  const gpts = S.poids.filter(e=>e.gras);
+  if(gpts.length >= 2){
+    const gMin = Math.min(...gpts.map(e=>e.gras))-1, gMax = Math.max(...gpts.map(e=>e.gras))+1;
+    const GY = v => mT + (1-(v-gMin)/(gMax-gMin)) * (H-mT-mB);
+    out += `<polyline points="${gpts.map(e=>`${X(e.d)},${GY(e.gras)}`).join(" ")}" fill="none" stroke="#fb923c" stroke-width="2" stroke-dasharray="5 4" opacity=".9"/>`;
+    gpts.forEach(e=>{ out += `<circle cx="${X(e.d)}" cy="${GY(e.gras)}" r="3" fill="#fb923c"/>`; });
+    const lastG = gpts[gpts.length-1];
+    out += `<text x="${Math.min(X(lastG.d)+6, W-mR-46)}" y="${GY(lastG.gras)-7}" fill="#fb923c" font-size="11">${fmt1(lastG.gras)} %</text>`;
+  }
+  // légende
+  out += `<text x="${mL}" y="${H-6}" fill="#34d399" font-size="11">● Réel</text>`;
+  out += `<text x="${mL+64}" y="${H-6}" fill="#0ea5e9" font-size="11">╌ Prévu</text>`;
+  if(gpts.length >= 2) out += `<text x="${mL+134}" y="${H-6}" fill="#fb923c" font-size="11">╌ % gras</text>`;
+  svg.innerHTML = out;
+}
+
+/* ════════════════════════════════ INIT ════════════════════════════════ */
+(function init(){
+  $("backlink").hidden = false;
+  renderHeader();
+  if(S.profil){ fillProfilForm(); show("dash"); }
+  else show("profil");
+  // PWA : hors-ligne + installation (portée limitée à cette page)
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("fitness-sw.js", {scope:"/fitness.html"}).catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>

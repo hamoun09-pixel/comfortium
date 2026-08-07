@@ -1,0 +1,50 @@
+<Application x:Class="SentinelAI.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:SentinelAI.App.Converters"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+
+        <conv:NiveauVersCouleur x:Key="NiveauCouleur" />
+        <conv:NiveauVersLibelle x:Key="NiveauLibelle" />
+        <conv:TailleLisible x:Key="Taille" />
+        <conv:SignatureVersLibelle x:Key="Signature" />
+        <conv:DateLocale x:Key="DateLocale" />
+
+        <SolidColorBrush x:Key="Fond" Color="#FAFAFA" />
+        <SolidColorBrush x:Key="Bordure" Color="#DDDDDD" />
+        <SolidColorBrush x:Key="Accent" Color="#1565C0" />
+        <SolidColorBrush x:Key="TexteSecondaire" Color="#616161" />
+
+        <Style TargetType="TextBlock" x:Key="Titre">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="Aide">
+            <Setter Property="Foreground" Value="{StaticResource TexteSecondaire}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="110" />
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="BorderBrush" Value="{StaticResource Bordure}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEEEEE" />
+        </Style>
+
+    </Application.Resources>
+</Application>

@@ -1,0 +1,446 @@
+{
+  "version": "0.1",
+  "source": "règles intégrées SentinelAI",
+  "regles": [
+    {
+      "id": "PS-OBF-001",
+      "nom": "Commande PowerShell encodée en Base64",
+      "description": "Le paramètre -EncodedCommand sert à masquer le contenu réel d'une commande. Usage légitime rare, très fréquent dans les chaînes d'infection.",
+      "categorie": "obfuscation",
+      "poids": 30,
+      "cibles": ["Script", "Autre"],
+      "regex": true,
+      "motifs": ["-e(nc|ncod|ncoded|ncodedcommand)?\\s+[A-Za-z0-9+/=]{60,}"]
+    },
+    {
+      "id": "PS-OBF-002",
+      "nom": "Décodage Base64 en mémoire",
+      "description": "FromBase64String combiné à une exécution indique un contenu reconstruit à la volée pour éviter l'inspection.",
+      "categorie": "obfuscation",
+      "poids": 18,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["FromBase64String", "Text\\.Encoding\\]::(UTF8|Unicode|ASCII)\\.GetString"],
+      "motifsRequis": 2
+    },
+    {
+      "id": "PS-EXE-001",
+      "nom": "Exécution dynamique de code",
+      "description": "Invoke-Expression (IEX) exécute une chaîne de caractères comme du code. C'est le point d'arrivée classique d'un téléchargement.",
+      "categorie": "execution",
+      "poids": 22,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["\\bInvoke-Expression\\b", "\\bIEX\\s*[\\(\\$\"']"]
+    },
+    {
+      "id": "PS-NET-001",
+      "nom": "Téléchargement puis exécution immédiate",
+      "description": "Un script qui récupère du contenu distant et l'exécute sans l'écrire sur disque : schéma « download cradle ».",
+      "categorie": "execution",
+      "poids": 35,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": [
+        "(DownloadString|DownloadFile|DownloadData)\\s*\\(",
+        "(Invoke-Expression|IEX|Invoke-WebRequest|iwr|curl|wget)"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "PS-NET-002",
+      "nom": "Client web instancié dans un script",
+      "description": "Net.WebClient ou HttpClient dans un script local : souvent utilisé pour récupérer une charge utile.",
+      "categorie": "reseau",
+      "poids": 12,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["Net\\.WebClient", "Net\\.Http\\.HttpClient", "System\\.Net\\.Sockets\\.TCPClient"]
+    },
+    {
+      "id": "PS-ARG-001",
+      "nom": "Lancement PowerShell furtif",
+      "description": "Combinaison -WindowStyle Hidden / -NoProfile / -ExecutionPolicy Bypass : exécution sans fenêtre et sans contrôle de stratégie.",
+      "categorie": "furtivite",
+      "poids": 25,
+      "cibles": ["Script", "Raccourci", "Autre"],
+      "regex": true,
+      "motifs": [
+        "-w(indowstyle)?\\s+h(idden)?\\b",
+        "-(ep|executionpolicy)\\s+bypass\\b",
+        "-nop(rofile)?\\b"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "DEF-TAMP-001",
+      "nom": "Désactivation de Microsoft Defender",
+      "description": "Modification des préférences Defender : désactivation de la protection en temps réel ou ajout d'exclusions. Signal très fort.",
+      "categorie": "sabotage",
+      "poids": 45,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "Set-MpPreference\\s+.*Disable(RealtimeMonitoring|IOAVProtection|ScriptScanning|BehaviorMonitoring)",
+        "Add-MpPreference\\s+.*-Exclusion(Path|Process|Extension)",
+        "sc\\s+(stop|config)\\s+WinDefend",
+        "DisableAntiSpyware"
+      ]
+    },
+    {
+      "id": "DEF-AMSI-001",
+      "nom": "Contournement d'AMSI",
+      "description": "Manipulation d'amsiInitFailed ou de AmsiScanBuffer pour neutraliser l'inspection antimalware des scripts.",
+      "categorie": "sabotage",
+      "poids": 50,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": ["amsiInitFailed", "AmsiScanBuffer", "AmsiUtils", "amsi\\.dll"]
+    },
+    {
+      "id": "RANSOM-001",
+      "nom": "Suppression des sauvegardes système",
+      "description": "Effacement des clichés instantanés ou de l'historique de sauvegarde : préparation typique d'un rançongiciel.",
+      "categorie": "destruction",
+      "poids": 55,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "vssadmin(\\.exe)?\\s+delete\\s+shadows",
+        "wbadmin(\\.exe)?\\s+delete\\s+(catalog|systemstatebackup|backup)",
+        "Get-WmiObject\\s+Win32_Shadowcopy.*Delete",
+        "bcdedit(\\.exe)?\\s+/set\\s+.*recoveryenabled\\s+no",
+        "bcdedit(\\.exe)?\\s+/set\\s+.*bootstatuspolicy\\s+ignoreallfailures"
+      ]
+    },
+    {
+      "id": "PERSIST-001",
+      "nom": "Persistance par clé de registre Run",
+      "description": "Écriture dans une clé d'exécution automatique pour relancer le programme à chaque ouverture de session.",
+      "categorie": "persistance",
+      "poids": 28,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "(HKCU|HKLM|HKEY_[A-Z_]+)\\\\+SOFTWARE\\\\+Microsoft\\\\+Windows\\\\+CurrentVersion\\\\+Run",
+        "Microsoft\\\\+Windows\\\\+CurrentVersion\\\\+RunOnce"
+      ]
+    },
+    {
+      "id": "PERSIST-002",
+      "nom": "Persistance par tâche planifiée",
+      "description": "Création d'une tâche planifiée, souvent avec exécution au démarrage ou sous le compte SYSTEM.",
+      "categorie": "persistance",
+      "poids": 20,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "schtasks(\\.exe)?\\s+/create",
+        "Register-ScheduledTask",
+        "New-ScheduledTaskTrigger"
+      ]
+    },
+    {
+      "id": "PERSIST-003",
+      "nom": "Persistance par service ou WMI",
+      "description": "Création d'un service Windows ou d'un abonnement d'événement WMI, deux mécanismes de persistance discrets.",
+      "categorie": "persistance",
+      "poids": 25,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "New-Service\\s",
+        "sc(\\.exe)?\\s+create\\s",
+        "__EventFilter",
+        "CommandLineEventConsumer"
+      ]
+    },
+    {
+      "id": "LOLBIN-001",
+      "nom": "Détournement d'un utilitaire Windows",
+      "description": "certutil, bitsadmin, mshta, regsvr32 ou rundll32 utilisés pour télécharger ou exécuter du code (« LOLBins »).",
+      "categorie": "execution",
+      "poids": 30,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "certutil(\\.exe)?\\s+.*-(urlcache|decode|encode)",
+        "bitsadmin(\\.exe)?\\s+/transfer",
+        "mshta(\\.exe)?\\s+(http|javascript:|vbscript:)",
+        "regsvr32(\\.exe)?\\s+.*(/i:http|scrobj\\.dll)",
+        "rundll32(\\.exe)?\\s+.*javascript:"
+      ]
+    },
+    {
+      "id": "INJECT-001",
+      "nom": "Injection de code en mémoire",
+      "description": "Appels d'API d'allocation et d'exécution mémoire depuis un script : chargement d'un shellcode sans fichier.",
+      "categorie": "execution",
+      "poids": 45,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": [
+        "VirtualAlloc(Ex)?",
+        "(CreateRemoteThread|CreateThread|QueueUserAPC)",
+        "WriteProcessMemory"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "INJECT-002",
+      "nom": "Chargement d'assemblage en mémoire",
+      "description": "Reflection.Assembly::Load sur un tableau d'octets : exécution de code .NET sans écriture sur disque.",
+      "categorie": "execution",
+      "poids": 30,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["\\[Reflection\\.Assembly\\]::Load", "System\\.Reflection\\.Assembly\\]?::Load"]
+    },
+    {
+      "id": "CRED-001",
+      "nom": "Outil de vol d'identifiants",
+      "description": "Références à des outils connus d'extraction de mots de passe ou à la mémoire du processus LSASS.",
+      "categorie": "identifiants",
+      "poids": 55,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "Invoke-Mimikatz",
+        "mimikatz",
+        "sekurlsa::",
+        "lsadump::",
+        "comsvcs\\.dll.*MiniDump",
+        "procdump.*lsass"
+      ]
+    },
+    {
+      "id": "CRED-002",
+      "nom": "Collecte de mots de passe de navigateur",
+      "description": "Accès aux bases de connexions de Chrome, Edge ou Firefox : comportement typique d'un voleur d'informations.",
+      "categorie": "identifiants",
+      "poids": 35,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "Login Data",
+        "logins\\.json",
+        "key[34]\\.db",
+        "Local State.*os_crypt"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "PRIV-001",
+      "nom": "Élévation de privilèges ou contournement UAC",
+      "description": "Manipulation classique du registre pour exécuter un programme avec élévation sans invite.",
+      "categorie": "privileges",
+      "poids": 35,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "ms-settings\\\\+shell\\\\+open\\\\+command",
+        "fodhelper(\\.exe)?",
+        "computerdefaults(\\.exe)?",
+        "eventvwr(\\.exe)?.*mscfile",
+        "EnableLUA.*0"
+      ]
+    },
+    {
+      "id": "FIREWALL-001",
+      "nom": "Désactivation du pare-feu Windows",
+      "description": "Extinction du pare-feu pour tous les profils réseau.",
+      "categorie": "sabotage",
+      "poids": 40,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "netsh\\s+(advfirewall|firewall)\\s+set\\s+(allprofiles|opmode).*(state\\s+off|disable)",
+        "Set-NetFirewallProfile\\s+.*-Enabled\\s+False"
+      ]
+    },
+    {
+      "id": "LOG-001",
+      "nom": "Effacement des journaux d'événements",
+      "description": "Suppression des journaux Windows : tentative de dissimulation après compromission.",
+      "categorie": "furtivite",
+      "poids": 40,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "wevtutil(\\.exe)?\\s+cl\\s",
+        "Clear-EventLog",
+        "Remove-Item.*\\.evtx"
+      ]
+    },
+    {
+      "id": "VBS-001",
+      "nom": "Script VBScript avec exécution shell",
+      "description": "WScript.Shell + Run : lancement d'un programme externe, souvent masqué (paramètre 0).",
+      "categorie": "execution",
+      "poids": 20,
+      "cibles": ["Script"],
+      "extensions": [".vbs", ".vbe", ".wsf", ".hta", ".js", ".jse"],
+      "regex": true,
+      "motifs": ["WScript\\.Shell", "\\.Run\\s*\\(", "ShellExecute"],
+      "motifsRequis": 2
+    },
+    {
+      "id": "VBS-002",
+      "nom": "Écriture de fichier par ADODB.Stream",
+      "description": "ADODB.Stream sert à écrire un binaire sur le disque depuis un script : dépôt de charge utile.",
+      "categorie": "execution",
+      "poids": 30,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["ADODB\\.Stream", "SaveToFile"],
+      "motifsRequis": 2
+    },
+    {
+      "id": "JS-001",
+      "nom": "Évaluation dynamique en JavaScript",
+      "description": "eval, Function() ou unescape sur une longue chaîne : code masqué reconstruit à l'exécution.",
+      "categorie": "obfuscation",
+      "poids": 18,
+      "cibles": ["Script"],
+      "extensions": [".js", ".jse", ".wsf", ".hta"],
+      "regex": true,
+      "motifs": [
+        "\\beval\\s*\\(",
+        "new\\s+Function\\s*\\(",
+        "unescape\\s*\\(\\s*['\"]%",
+        "ActiveXObject\\s*\\("
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "BAT-001",
+      "nom": "Fichier de commandes furtif",
+      "description": "Masquage de la fenêtre, redirection vers nul et attributs cachés : le script cherche à ne pas être vu.",
+      "categorie": "furtivite",
+      "poids": 15,
+      "cibles": ["Script"],
+      "extensions": [".bat", ".cmd"],
+      "regex": true,
+      "motifs": [
+        "@echo\\s+off",
+        "attrib\\s+\\+[hs]",
+        ">\\s*nul\\s+2>&1",
+        "start\\s+/(b|min)"
+      ],
+      "motifsRequis": 3
+    },
+    {
+      "id": "BAT-002",
+      "nom": "Arrêt forcé de processus de sécurité",
+      "description": "taskkill visant des processus antivirus ou de sauvegarde.",
+      "categorie": "sabotage",
+      "poids": 35,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "taskkill(\\.exe)?\\s+/f\\s+/im\\s+.*(msmpeng|defender|avp|avast|avg|eset|sophos|bitdefender|malwarebytes)",
+        "Stop-Service\\s+.*(WinDefend|Sense|wscsvc)"
+      ]
+    },
+    {
+      "id": "EXFIL-001",
+      "nom": "Adresse IP codée en dur avec un port",
+      "description": "Connexion directe vers une adresse IP littérale : contourne le DNS et les listes de domaines.",
+      "categorie": "reseau",
+      "poids": 15,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": ["\\b(?:\\d{1,3}\\.){3}\\d{1,3}:\\d{2,5}\\b"]
+    },
+    {
+      "id": "EXFIL-002",
+      "nom": "Canal de commande via messagerie instantanée",
+      "description": "Webhook Discord/Telegram/Slack dans un script local : voie d'exfiltration courante.",
+      "categorie": "reseau",
+      "poids": 30,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "discord(app)?\\.com/api/webhooks",
+        "api\\.telegram\\.org/bot",
+        "hooks\\.slack\\.com/services"
+      ]
+    },
+    {
+      "id": "BIN-001",
+      "nom": "Chaînes d'API sensibles dans un binaire",
+      "description": "Le binaire référence à la fois l'allocation mémoire distante et l'écriture dans un autre processus.",
+      "categorie": "execution",
+      "poids": 20,
+      "cibles": ["Executable", "Bibliotheque"],
+      "regex": true,
+      "motifs": [
+        "VirtualAllocEx",
+        "WriteProcessMemory",
+        "(CreateRemoteThread|NtCreateThreadEx|SetWindowsHookEx)"
+      ],
+      "motifsRequis": 3
+    },
+    {
+      "id": "BIN-002",
+      "nom": "Binaire lançant un interpréteur de commandes",
+      "description": "L'exécutable contient des commandes PowerShell ou cmd, dont des paramètres de furtivité.",
+      "categorie": "execution",
+      "poids": 18,
+      "cibles": ["Executable", "Bibliotheque", "Installeur"],
+      "regex": true,
+      "motifs": [
+        "powershell(\\.exe)?\\s+-",
+        "cmd(\\.exe)?\\s+/c\\s",
+        "-executionpolicy\\s+bypass"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "BIN-003",
+      "nom": "Détection d'analyse ou d'environnement virtuel",
+      "description": "Le fichier cherche à savoir s'il est observé (débogueur, machine virtuelle) pour modifier son comportement.",
+      "categorie": "furtivite",
+      "poids": 22,
+      "cibles": ["Executable", "Bibliotheque", "Script"],
+      "regex": true,
+      "motifs": [
+        "IsDebuggerPresent",
+        "CheckRemoteDebuggerPresent",
+        "(VMwareService|VBoxService|vboxtray|SbieDll)",
+        "Win32_ComputerSystem.*(VMware|VirtualBox|QEMU)"
+      ],
+      "motifsRequis": 2
+    },
+    {
+      "id": "CRYPT-001",
+      "nom": "Chiffrement massif de fichiers",
+      "description": "Boucle de chiffrement sur des fichiers utilisateur, avec suppression de l'original : comportement de rançongiciel.",
+      "categorie": "destruction",
+      "poids": 45,
+      "cibles": ["Script"],
+      "regex": true,
+      "motifs": [
+        "(AesCryptoServiceProvider|RijndaelManaged|Aes\\.Create|CryptoStream)",
+        "(Get-ChildItem|GetFiles|EnumerateFiles).*-Recurse|Directory\\.GetFiles",
+        "(Remove-Item|DeleteFile|File\\.Delete)"
+      ],
+      "motifsRequis": 3
+    },
+    {
+      "id": "RANSOM-002",
+      "nom": "Note de rançon",
+      "description": "Texte typique d'une demande de rançon (paiement contre déchiffrement).",
+      "categorie": "destruction",
+      "poids": 50,
+      "cibles": ["*"],
+      "regex": true,
+      "motifs": [
+        "your files (have been|are) encrypted",
+        "vos fichiers ont été chiffrés",
+        "decrypt(ion)? (key|tool).*(bitcoin|monero|BTC|XMR)",
+        "\\.onion/.*(pay|decrypt)"
+      ]
+    }
+  ]
+}

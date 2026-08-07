@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SentinelAI.Core/SentinelAI.Core.csproj" />
+    <Project Path="src/SentinelAI.Cli/SentinelAI.Cli.csproj" />
+    <Project Path="src/SentinelAI.App/SentinelAI.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SentinelAI.Core.Tests/SentinelAI.Core.Tests.csproj" />
+  </Folder>
+</Solution>

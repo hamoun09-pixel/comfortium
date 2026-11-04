@@ -4,6 +4,8 @@
    Le rapport et l'envoi du prospect à HubSpot ne sont débloqués qu'après la vérification du code. */
 (function () {
   'use strict';
+  // Texto (SMS) masqué tant que Twilio n'est pas configuré dans Netlify. Mettre true une fois TWILIO_* ajoutées.
+  var SMS_ON = false;
   var CTX_KEY = 'comfortium_etude_ctx';
   var CATALOGUE_URL = 'catalogue-comfortium-2026-10-15.json';
   var JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
@@ -233,7 +235,7 @@
     } else if (S.step === 3) {
       h += '<p class="chat-form-title">3/4 · ' + esc(tl.s3) + '</p><div class="chat-form-row"><div>' + inp('et_pn', tl.prenom, 'text', k.prenom, ' autocomplete="given-name"') + '</div><div>' + inp('et_nm', tl.nom, 'text', k.nom, ' autocomplete="family-name"') + '</div></div>' +
         inp('et_em', tl.email, 'email', k.email, ' autocomplete="email" placeholder="votre@courriel.com"') + inp('et_tl', tl.tel, 'tel', k.tel, ' autocomplete="tel" placeholder="(514) 555-1234"') +
-        '<p class="chat-form-lbl" style="margin-top:8px">' + esc(tl.channel) + '</p><div class="et-radios"><label><input type="radio" name="et_chn" value="email"' + (k.channel !== 'sms' ? ' checked' : '') + '/> ' + esc(tl.chEmail) + '</label><label><input type="radio" name="et_chn" value="sms"' + (k.channel === 'sms' ? ' checked' : '') + '/> ' + esc(tl.chSms) + '</label></div>' +
+        (SMS_ON ? '<p class="chat-form-lbl" style="margin-top:8px">' + esc(tl.channel) + '</p><div class="et-radios"><label><input type="radio" name="et_chn" value="email"' + (k.channel !== 'sms' ? ' checked' : '') + '/> ' + esc(tl.chEmail) + '</label><label><input type="radio" name="et_chn" value="sms"' + (k.channel === 'sms' ? ' checked' : '') + '/> ' + esc(tl.chSms) + '</label></div>' : '') +
         '<label class="et-check"><input type="checkbox" id="et_cs"' + (k.consent ? ' checked' : '') + '/><span>' + esc(tl.consent) + '</span></label>' +
         '<input type="text" id="et_hp" style="display:none!important;position:absolute;left:-9999px" tabindex="-1" autocomplete="off"/>';
       h += btns([['back', tl.back], ['send', tl.send]]);
@@ -276,7 +278,7 @@
   function save() {
     if (S.step === 1) { S.projet.chauffage = val('et_ch'); S.projet.propriete = val('et_pr'); S.projet.type_tp = val('et_tp'); S.projet.btu = val('et_su'); S.projet.codePostal = val('et_cp').toUpperCase(); }
     if (S.step === 2) { S.conso = { hydroD: num(val('et_hd')), hydroK: num(val('et_hk')), mazoutL: num(val('et_ml')), mazoutD: num(val('et_md')), unknown: checked('et_unk') }; }
-    if (S.step === 3) { S.contact.prenom = val('et_pn'); S.contact.nom = val('et_nm'); S.contact.email = val('et_em'); S.contact.tel = val('et_tl'); S.contact.consent = checked('et_cs'); var r = document.querySelector('input[name="et_chn"]:checked'); S.contact.channel = r ? r.value : 'email'; }
+    if (S.step === 3) { S.contact.prenom = val('et_pn'); S.contact.nom = val('et_nm'); S.contact.email = val('et_em'); S.contact.tel = val('et_tl'); S.contact.consent = checked('et_cs'); var r = document.querySelector('input[name="et_chn"]:checked'); S.contact.channel = (SMS_ON && r) ? r.value : 'email'; }
   }
   function onClick(e) {
     var b = e.target.closest('[data-et]'); if (!b) return;

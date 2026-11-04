@@ -35,7 +35,7 @@
   }
   // Émojis pictographiques (on garde ✓, ×, →, ←, ↗).
   var RX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{2712}\u{2714}-\u{27BF}\u{FE0F}\u{200D}]\s?/gu;
-  var ZONES = '.hero, .cv26-panel, .calc-section, .result-section';
+  var ZONES = '#cv26Lookup, #calcSection';
   function clean(root) {
     (root.querySelectorAll ? [root] : []).concat(Array.prototype.slice.call(root.querySelectorAll ? root.querySelectorAll('*') : [])).forEach(function (el) {
       if (el.closest && !el.closest(ZONES)) return;
@@ -76,37 +76,5 @@
     if (location.hash === '#cv26Lookup') { box.classList.remove('cv26-hidden'); yes.setAttribute('aria-expanded', 'true'); }
     if (skip) skip.addEventListener('click', toQuestions);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
-})();
-
-/* Panneau « Votre projet » : se remplit à chaque réponse (ordinateur seulement). */
-(function () {
-  'use strict';
-  var F = [['statut', 'Statut', 'Status'], ['codePostal', 'Code postal', 'Postal code'], ['chauffage', 'Chauffage actuel', 'Current heating'], ['propriete', 'Propriété', 'Property'], ['superficie', 'Superficie', 'Floor area'], ['type_tp', 'Thermopompe', 'Heat pump'], ['amperage', 'Entrée électrique', 'Electrical service'], ['horizon', 'Échéancier', 'Timeline']];
-  function en() { return document.documentElement.lang === 'en'; }
-  function ans() { try { return (typeof answers !== 'undefined') ? answers : {}; } catch (e) { return {}; } }
-  function label(field, v) {
-    var o = document.querySelector('.option[data-field="' + field + '"][data-value="' + String(v).replace(/"/g, '') + '"] .option-label');
-    return o ? o.textContent.trim().split(' ~')[0] : v;
-  }
-  function money(n) { return new Intl.NumberFormat(en() ? 'en-CA' : 'fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(n); }
-  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  var side;
-  function render() {
-    var sec = document.getElementById('calcSection'); if (!sec || !sec.querySelector('.step')) return;
-    if (!side || !sec.contains(side)) { side = document.createElement('aside'); side.className = 'cfx-side'; side.setAttribute('aria-label', 'Votre projet'); sec.appendChild(side); }
-    var a = ans(), E = en(), rows = '';
-    F.forEach(function (f) {
-      var v = f[0] === 'codePostal' ? (a.codePostal || (document.getElementById('codePostal') || {}).value || '') : a[f[0]];
-      rows += '<div><dt>' + esc(E ? f[2] : f[1]) + '</dt><dd' + (v ? '' : ' class="cfx-empty"') + '>' + esc(v ? (f[0] === 'codePostal' ? String(v).toUpperCase() : label(f[0], v)) : '—') + '</dd></div>';
-    });
-    var m = window.cv26Selected, amt;
-    if (m && m.base) amt = '<div class="cfx-amt"><small>' + (E ? 'LogisVert for your model' : 'LogisVert de votre modèle') + '</small><strong>' + money(m.base) + '</strong><span>' + esc(m.brand + ' · ' + m.out) + '</span></div>';
-    else amt = '<div class="cfx-amt"><small>LogisVert</small><strong>' + (E ? 'Calculated at the end' : 'Calculé à la fin') + '</strong><span>' + (E ? 'Choose your model above for the exact amount' : 'Choisissez votre modèle en haut pour le montant exact') + '</span></div>';
-    side.innerHTML = '<p class="cfx-eb">' + (E ? 'Your project' : 'Votre projet') + '</p><h3>' + (E ? 'Summary' : 'En résumé') + '</h3><dl>' + rows + '</dl>' + amt +
-      '<p class="cfx-note">' + (E ? 'Free and without obligation. An advisor replies within 24 to 48 hours.' : 'Gratuit et sans engagement. Un conseiller vous répond en 24 à 48 h.') + '</p>';
-  }
-  var t; function soon() { clearTimeout(t); t = setTimeout(render, 60); }
-  function go() { render(); ['click', 'input', 'change'].forEach(function (ev) { document.addEventListener(ev, soon, true); }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();

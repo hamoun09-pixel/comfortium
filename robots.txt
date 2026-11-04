@@ -1,4 +1,8 @@
+# Comfortium — robots.txt
+# Moteurs de recherche (Google, Bing) et moteurs de réponse IA (OAI-SearchBot / ChatGPT Search, PerplexityBot) : autorisés.
+# Robots d'entraînement (GPTBot, Google-Extended, CCBot) : autorisés par défaut, décision d'affaires à confirmer.
 User-agent: *
 Allow: /
+Disallow: /.netlify/
 
 Sitemap: https://comfortium.ca/sitemap.xml

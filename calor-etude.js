@@ -185,7 +185,7 @@
     else if (ch === 'gaz') a.energie = 'gaz';
     var tp = { centrale: 'centrale', multizone: 'multizone', murale: 'murale', conseiller: 'conseil' }[ctx.type_tp]; if (tp) a.solution = tp;
     var am = ctx.amperage; a.entree = am === '200' ? '200' : (am === '100' || am === '125' || am === '150') ? '100' : am === 'unknown' ? 'nsp' : '';
-    a.echeance = { '1_3_mois': '3mois', '3_6_mois': '6mois', urgent: 'urgent', info: 'info' }[ctx.horizon] || '';
+    a.echeance = { asap: 'urgent', '1_3_mois': '3mois', '3_6_mois': '6mois', urgent: 'urgent', info: 'info' }[ctx.horizon] || '';
     a.model = ctx.model || null; a.lv = ctx.lv || null;
     return a;
   }

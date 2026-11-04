@@ -1111,7 +1111,9 @@ function resetChat(){
   const ci=document.getElementById('chatInput');
   if(hn)hn.textContent=tl.headName;if(hs)hs.textContent=tl.headStatus;
   if(ci)ci.placeholder=tl.inputPh;
+  const etSnap=(window.calorEtude&&calorEtude.snapshot)?calorEtude.snapshot():null;
   if(chatOpen)initChat();
+  if(etSnap&&chatOpen)setTimeout(function(){calorEtude.restore(etSnap);},700);
 }
 function initChat(){
   if(window.calorEtude)calorEtude.stop();

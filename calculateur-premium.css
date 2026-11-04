@@ -85,3 +85,8 @@
 #calcSection #btnNext:hover:not([disabled]){background:#2a4a3e!important}
 #calcSection #btnNext[disabled]{opacity:.4!important;box-shadow:none!important}
 #calcSection #btnPrev{background:var(--cf-tile)!important;color:var(--cf-green)!important;border:1px solid var(--cf-hair)!important;border-radius:12px!important}
+
+/* Correction de lisibilité : arguments de confiance sous l'introduction (texte presque blanc sur fond crème) */
+.hero-trust-item{color:#1f2622!important;opacity:1!important;font-weight:600!important}
+.hero-trust-item span{color:#1f2622!important;opacity:1!important}
+.hero-trust-check{background:#203b32!important;color:#f5f2ea!important;border:0!important;opacity:1!important}

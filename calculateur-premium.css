@@ -88,3 +88,45 @@ body{background:var(--cf-cream)!important;color:var(--cf-ink)}
 
 /* Ancien pied de page en double */
 footer.footer{display:none!important}
+
+/* Étape facultative : recherche du modèle */
+.cvp{max-width:980px!important;padding:34px 34px 26px!important}
+.cvp-eyebrow{font:700 11px Arial,Helvetica,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--cf-gold);margin:0 0 6px}
+.cvp h2{margin:0 0 8px!important;font-size:clamp(28px,3.4vw,38px)!important}
+.cvp-lead{color:var(--cf-muted);line-height:1.6;margin:0 0 22px;max-width:640px}
+.cvp-choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cvp-choice{display:flex;align-items:center;gap:14px;text-align:left;background:var(--cf-paper);border:1.5px solid var(--cf-line);border-radius:16px;padding:18px;cursor:pointer;font-family:Arial,Helvetica,sans-serif;color:var(--cf-ink);transition:border-color .15s,background .15s,box-shadow .15s}
+.cvp-choice:hover{border-color:#b9c4bd}
+.cvp-choice[aria-expanded="true"]{border-color:var(--cf-green);background:var(--cf-tint);box-shadow:0 0 0 3px rgba(32,59,50,.10)}
+.cvp-choice:focus-visible,.cvp-skip:focus-visible{outline:2px solid var(--cf-gold);outline-offset:2px}
+.cvp-ico{flex:0 0 46px;height:46px;border-radius:12px;background:var(--cf-tint);display:grid;place-items:center}
+.cvp-choice[aria-expanded="true"] .cvp-ico{background:var(--cf-paper)}
+.cvp-ico svg,.cvp-inputwrap svg{width:22px;height:22px;stroke:var(--cf-green2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cvp-txt{display:flex;flex-direction:column;gap:3px}.cvp-txt strong{font-size:15.5px}.cvp-txt small{font-size:12.5px;color:var(--cf-muted)}
+.cvp-search{margin-top:22px;padding-top:22px;border-top:1px solid var(--cf-line);animation:cvpIn .3s ease}
+@keyframes cvpIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cvp-search{animation:none}}
+.cvp-inputwrap{position:relative}.cvp-inputwrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none}
+.cvp-inputwrap input{width:100%;padding-left:46px!important;font-size:16px!important;height:54px}
+#cv26SearchResults{margin-top:10px}#cv26SearchResults select{width:100%}
+.cvp-or{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--cf-muted);font-size:12.5px}
+.cvp-or::before,.cvp-or::after{content:"";flex:1;height:1px;background:var(--cf-line)}
+.cvp-grid3{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.cvp-type{margin-top:14px;max-width:320px}
+#cv26Preview{margin-top:20px!important;padding:18px 20px!important;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px}
+#cv26Preview.cv26-hidden{display:none!important}
+#cv26Preview p{margin:3px 0;font-size:13.5px}
+#cv26Preview p.cv26-help{grid-column:1/-1;margin-top:8px;font-size:12px}
+.cvp-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:20px}
+#cv26Continue[disabled]{display:none!important}
+#cv26Continue{padding:14px 22px!important;font:700 14.5px Arial,Helvetica,sans-serif!important;cursor:pointer}
+.cvp-skip{background:none;border:0;color:var(--cf-green);text-decoration:underline;text-underline-offset:3px;font:600 13.5px Arial,Helvetica,sans-serif;cursor:pointer;padding:6px 2px}
+.cvp-foot{margin:22px 0 0;font-size:12px;color:var(--cf-muted);line-height:1.5}
+@media (max-width:760px){.cvp{padding:22px 18px 18px!important}.cvp-choices,.cvp-grid3,#cv26Preview{grid-template-columns:1fr!important}}
+/* Priorité sur l'ancien style « .cv26-panel button » */
+.cvp button.cvp-choice{background:var(--cf-paper)!important;color:var(--cf-ink)!important;border:1.5px solid var(--cf-line)!important;box-shadow:none!important;width:auto!important;margin:0!important;padding:18px!important;border-radius:16px!important}
+.cvp button.cvp-choice:hover{border-color:#b9c4bd!important}
+.cvp button.cvp-choice[aria-expanded="true"]{background:var(--cf-tint)!important;border-color:var(--cf-green)!important;box-shadow:0 0 0 3px rgba(32,59,50,.10)!important}
+.cvp button.cvp-choice strong{color:var(--cf-ink)!important}.cvp button.cvp-choice small{color:var(--cf-muted)!important}
+.cvp button.cvp-skip{background:none!important;color:var(--cf-green)!important;border:0!important;box-shadow:none!important;padding:6px 2px!important;width:auto!important}
+.cvp input[type="search"]::-webkit-search-cancel-button{filter:grayscale(1)}

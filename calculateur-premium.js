@@ -57,3 +57,24 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();
+
+/* Étape facultative : ouvrir la recherche ou passer aux questions. */
+(function () {
+  'use strict';
+  function go() {
+    var yes = document.getElementById('cvpYes'), no = document.getElementById('cvpNo'), skip = document.getElementById('cvpSkip'), box = document.getElementById('cvpSearch');
+    if (!yes || !box) return;
+    function toQuestions() { var c = document.getElementById('calcSection'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    yes.addEventListener('click', function () {
+      var open = box.classList.contains('cv26-hidden');
+      box.classList.toggle('cv26-hidden', !open); yes.setAttribute('aria-expanded', String(open));
+      if (open) setTimeout(function () { var s = document.getElementById('cv26Search'); if (s) s.focus({ preventScroll: true }); }, 60);
+    });
+    if (no) no.addEventListener('click', toQuestions);
+    // Les liens « choisir mon modèle » du résultat ouvrent directement la recherche.
+    document.addEventListener('click', function (e) { var l = e.target.closest && e.target.closest('a[href="#cv26Lookup"]'); if (l && box.classList.contains('cv26-hidden')) { box.classList.remove('cv26-hidden'); yes.setAttribute('aria-expanded', 'true'); } });
+    if (location.hash === '#cv26Lookup') { box.classList.remove('cv26-hidden'); yes.setAttribute('aria-expanded', 'true'); }
+    if (skip) skip.addEventListener('click', toQuestions);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();

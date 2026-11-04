@@ -98,6 +98,81 @@ async function hubspotRequest(path, options, token) {
   }
 }
 
+// === UPSERT AVEC REPLI ===
+// Si HubSpot refuse une propriété (inexistante ou valeur non reconnue), on réessaie avec les propriétés
+// standard seulement et on verse le reste dans les notes : le lead n'est jamais perdu.
+const STANDARD_KEYS = ["firstname", "lastname", "email", "phone", "address", "city"];
+function describeExtras(properties) {
+  return Object.keys(properties)
+    .filter((k) => !STANDARD_KEYS.includes(k) && k !== "notes_hvac")
+    .map((k) => k + " : " + properties[k])
+    .join(" · ");
+}
+async function upsert(email, properties, createOnly, token) {
+  const update = await hubspotRequest(
+    `/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`,
+    { method: "PATCH", body: JSON.stringify({ properties }) },
+    token
+  );
+  if (update.status !== 404) return { res: update, action: "updated" };
+  const create = await hubspotRequest(
+    "/crm/v3/objects/contacts",
+    { method: "POST", body: JSON.stringify({ properties: { ...properties, ...createOnly } }) },
+    token
+  );
+  return { res: create, action: "created" };
+}
+async function upsertWithFallback(email, properties, createOnly, token) {
+  let r = await upsert(email, properties, createOnly, token);
+  if (r.res.ok || r.res.status !== 400) return { ...r, level: "complet" };
+  console.error("HubSpot 400 (propriétés complètes) :", JSON.stringify(r.res.data).slice(0, 600));
+  const extras = describeExtras(properties);
+  const base = {};
+  STANDARD_KEYS.forEach((k) => { if (properties[k]) base[k] = properties[k]; });
+  const notes = [properties.notes_hvac, extras].filter(Boolean).join(" · ");
+  r = await upsert(email, { ...base, notes_hvac: notes }, {}, token);
+  if (r.res.ok || r.res.status !== 400) return { ...r, level: "base+notes" };
+  console.error("HubSpot 400 (base + notes_hvac) :", JSON.stringify(r.res.data).slice(0, 600));
+  r = await upsert(email, { ...base, message: notes.slice(0, 60000) }, {}, token);
+  if (r.res.ok || r.res.status !== 400) return { ...r, level: "base+message" };
+  console.error("HubSpot 400 (base + message) :", JSON.stringify(r.res.data).slice(0, 600));
+  r = await upsert(email, base, {}, token);
+  return { ...r, level: "base" };
+}
+
+// === NOTIFICATION PAR COURRIEL (Resend) ===
+// Envoyée à chaque lead, même si HubSpot échoue. Destinataire : LEAD_NOTIFY_EMAIL (sinon info@comfortium.ca).
+async function notifyLead(properties, hubspot) {
+  const key = process.env.RESEND_API_KEY, from = process.env.VERIFICATION_FROM_EMAIL;
+  if (!key || !from) return;
+  const to = (process.env.LEAD_NOTIFY_EMAIL || "info@comfortium.ca").split(",").map((x) => x.trim()).filter(Boolean);
+  const name = [properties.firstname, properties.lastname].filter(Boolean).join(" ") || properties.email;
+  const lines = [
+    "Nouveau lead sur comfortium.ca",
+    "",
+    "Nom : " + name,
+    "Courriel : " + (properties.email || "—"),
+    "Téléphone : " + (properties.phone || "—"),
+    "Ville : " + (properties.city || "—"),
+    "Source : " + (properties.lead_source_utm || "—"),
+    "Projet : " + [properties.request_type, properties.hvac_system_type, properties.property_type].filter(Boolean).join(" · "),
+    "",
+    "Détails : " + (properties.notes_hvac || "—"),
+    "",
+    "HubSpot : " + hubspot,
+  ];
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to, subject: "Nouveau lead — " + name, text: lines.join("\n"), reply_to: properties.email || undefined }),
+    });
+    if (!r.ok) console.error("Notification Resend", r.status, (await r.text()).slice(0, 300));
+  } catch (e) {
+    console.error("Notification Resend", e.message);
+  }
+}
+
 // === NETLIFY FUNCTION HANDLER ===
 
 exports.handler = async (event) => {
@@ -174,73 +249,17 @@ exports.handler = async (event) => {
   console.log("CRM PAYLOAD:", JSON.stringify(maskForLog(properties), null, 2));
 
   try {
-    // === UPSERT par email ===
-    // PATCH /contacts/{email}?idProperty=email
-    // - 200 si contact existe → update
-    // - 404 si contact n'existe pas → on bascule sur POST create
-    const updateResponse = await hubspotRequest(
-      `/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`,
-      { method: "PATCH", body: JSON.stringify({ properties }) },
-      token
-    );
-
-    if (updateResponse.status === 404) {
-      const createResponse = await hubspotRequest(
-        "/crm/v3/objects/contacts",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            properties: { ...properties, ...createOnlyProperties },
-          }),
-        },
-        token
-      );
-
-      console.log("CRM RESPONSE (created):", JSON.stringify(createResponse.data, null, 2));
-
-      if (!createResponse.ok) {
-        return jsonResponse(createResponse.status, {
-          error: "HubSpot create failed",
-          details: createResponse.data,
-        }, corsHeaders);
-      }
-
-      if (!createResponse.data?.id) {
-        return jsonResponse(502, {
-          error: "HubSpot create returned no contact ID",
-        }, corsHeaders);
-      }
-
-      return jsonResponse(200, {
-        success: true,
-        action: "created",
-        contactId: createResponse.data.id,
-      }, corsHeaders);
+    const r = await upsertWithFallback(email, properties, createOnlyProperties, token);
+    const ok = r.res.ok && r.res.data && r.res.data.id;
+    console.log("CRM RESPONSE (" + r.action + ", " + r.level + "):", r.res.status, ok ? r.res.data.id : JSON.stringify(r.res.data).slice(0, 600));
+    await notifyLead(properties, ok ? (r.action === "created" ? "contact créé" : "contact mis à jour") + (r.level !== "complet" ? " (champs de base seulement : " + r.level + ")" : "") : "ÉCHEC " + r.res.status + " — lead à saisir à la main");
+    if (!ok) {
+      return jsonResponse(r.res.ok ? 502 : r.res.status, { error: "HubSpot " + r.action + " failed", details: r.res.data }, corsHeaders);
     }
-
-    console.log("CRM RESPONSE (updated):", JSON.stringify(updateResponse.data, null, 2));
-
-    if (!updateResponse.ok) {
-      return jsonResponse(updateResponse.status, {
-        error: "HubSpot update failed",
-        details: updateResponse.data,
-      }, corsHeaders);
-    }
-
-    if (!updateResponse.data?.id) {
-      return jsonResponse(502, {
-        error: "HubSpot update returned no contact ID",
-      }, corsHeaders);
-    }
-
-    return jsonResponse(200, {
-      success: true,
-      action: "updated",
-      contactId: updateResponse.data.id,
-    }, corsHeaders);
-
+    return jsonResponse(200, { success: true, action: r.action, level: r.level, contactId: r.res.data.id }, corsHeaders);
   } catch (err) {
     console.error("Unexpected CRM error:", err);
+    await notifyLead(properties, "ÉCHEC (" + err.message + ") — lead à saisir à la main");
     return jsonResponse(500, {
       error: "Internal server error",
       details: err.message,

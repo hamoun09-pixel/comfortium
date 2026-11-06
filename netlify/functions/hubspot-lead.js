@@ -173,6 +173,34 @@ async function notifyLead(properties, hubspot) {
   }
 }
 
+// === NOTIFICATION TELEGRAM (facultative) ===
+// Actif seulement si TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID sont définis dans Netlify.
+async function notifyTelegram(properties, hubspot) {
+  const token = process.env.TELEGRAM_BOT_TOKEN, chat = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chat) return;
+  const name = [properties.firstname, properties.lastname].filter(Boolean).join(" ") || properties.email || "—";
+  const projet = [properties.request_type, properties.hvac_system_type, properties.property_type].filter(Boolean).join(" · ");
+  const text = [
+    "🔔 Nouveau lead — " + name,
+    "📞 " + (properties.phone || "—"),
+    "✉️ " + (properties.email || "—"),
+    "📍 " + (properties.city || "—"),
+    projet ? "🏠 " + projet : "",
+    "Source : " + (properties.lead_source_utm || "—"),
+    "HubSpot : " + hubspot,
+  ].filter(Boolean).join("\n");
+  try {
+    const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chat, text, disable_web_page_preview: true }),
+    });
+    if (!r.ok) console.error("Telegram", r.status, (await r.text()).slice(0, 200));
+  } catch (e) {
+    console.error("Telegram", e.message);
+  }
+}
+
 // === NETLIFY FUNCTION HANDLER ===
 
 exports.handler = async (event) => {
@@ -252,14 +280,15 @@ exports.handler = async (event) => {
     const r = await upsertWithFallback(email, properties, createOnlyProperties, token);
     const ok = r.res.ok && r.res.data && r.res.data.id;
     console.log("CRM RESPONSE (" + r.action + ", " + r.level + "):", r.res.status, ok ? r.res.data.id : JSON.stringify(r.res.data).slice(0, 600));
-    await notifyLead(properties, ok ? (r.action === "created" ? "contact créé" : "contact mis à jour") + (r.level !== "complet" ? " (champs de base seulement : " + r.level + ")" : "") : "ÉCHEC " + r.res.status + " — lead à saisir à la main");
+    const hsStatus = ok ? (r.action === "created" ? "contact créé" : "contact mis à jour") + (r.level !== "complet" ? " (champs de base seulement : " + r.level + ")" : "") : "ÉCHEC " + r.res.status + " — lead à saisir à la main";
+    await Promise.all([notifyLead(properties, hsStatus), notifyTelegram(properties, hsStatus)]);
     if (!ok) {
       return jsonResponse(r.res.ok ? 502 : r.res.status, { error: "HubSpot " + r.action + " failed", details: r.res.data }, corsHeaders);
     }
     return jsonResponse(200, { success: true, action: r.action, level: r.level, contactId: r.res.data.id }, corsHeaders);
   } catch (err) {
     console.error("Unexpected CRM error:", err);
-    await notifyLead(properties, "ÉCHEC (" + err.message + ") — lead à saisir à la main");
+    await Promise.all([notifyLead(properties, "ÉCHEC (" + err.message + ") — lead à saisir à la main"), notifyTelegram(properties, "ÉCHEC (" + err.message + ")")]);
     return jsonResponse(500, {
       error: "Internal server error",
       details: err.message,

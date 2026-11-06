@@ -179,16 +179,14 @@ async function notifyLead(properties, hubspot, telegram) {
 async function notifyTelegram(properties, hubspot) {
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim(), chat = (process.env.TELEGRAM_CHAT_ID || "").trim();
   if (!token || !chat) return "non configuré (" + (!token ? "TELEGRAM_BOT_TOKEN manquant" : "TELEGRAM_CHAT_ID manquant") + ")";
-  const name = [properties.firstname, properties.lastname].filter(Boolean).join(" ") || properties.email || "—";
+  // Loi 25 : aucune coordonnée (nom de famille, téléphone, courriel) dans Telegram, serveurs hors Québec.
+  const prenom = properties.firstname || "client";
   const projet = [properties.request_type, properties.hvac_system_type, properties.property_type].filter(Boolean).join(" · ");
   const text = [
-    "🔔 Nouveau lead — " + name,
-    "📞 " + (properties.phone || "—"),
-    "✉️ " + (properties.email || "—"),
-    "📍 " + (properties.city || "—"),
+    "🔔 Nouveau lead — " + prenom + (properties.city ? " · " + properties.city : ""),
     projet ? "🏠 " + projet : "",
-    "Source : " + (properties.lead_source_utm || "—"),
     "HubSpot : " + hubspot,
+    "Coordonnées : voir HubSpot ou le courriel d’alerte.",
   ].filter(Boolean).join("\n");
   try {
     const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {

@@ -142,7 +142,7 @@ async function upsertWithFallback(email, properties, createOnly, token) {
 
 // === NOTIFICATION PAR COURRIEL (Resend) ===
 // Envoyée à chaque lead, même si HubSpot échoue. Destinataire : LEAD_NOTIFY_EMAIL (sinon info@comfortium.ca).
-async function notifyLead(properties, hubspot) {
+async function notifyLead(properties, hubspot, telegram) {
   const key = process.env.RESEND_API_KEY, from = process.env.VERIFICATION_FROM_EMAIL;
   if (!key || !from) return;
   const to = (process.env.LEAD_NOTIFY_EMAIL || "info@comfortium.ca").split(",").map((x) => x.trim()).filter(Boolean);
@@ -160,6 +160,7 @@ async function notifyLead(properties, hubspot) {
     "Détails : " + (properties.notes_hvac || "—"),
     "",
     "HubSpot : " + hubspot,
+    "Telegram : " + (telegram || "—"),
   ];
   try {
     const r = await fetch("https://api.resend.com/emails", {
@@ -176,8 +177,8 @@ async function notifyLead(properties, hubspot) {
 // === NOTIFICATION TELEGRAM (facultative) ===
 // Actif seulement si TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID sont définis dans Netlify.
 async function notifyTelegram(properties, hubspot) {
-  const token = process.env.TELEGRAM_BOT_TOKEN, chat = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chat) return;
+  const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim(), chat = (process.env.TELEGRAM_CHAT_ID || "").trim();
+  if (!token || !chat) return "non configuré (" + (!token ? "TELEGRAM_BOT_TOKEN manquant" : "TELEGRAM_CHAT_ID manquant") + ")";
   const name = [properties.firstname, properties.lastname].filter(Boolean).join(" ") || properties.email || "—";
   const projet = [properties.request_type, properties.hvac_system_type, properties.property_type].filter(Boolean).join(" · ");
   const text = [
@@ -195,9 +196,14 @@ async function notifyTelegram(properties, hubspot) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chat_id: chat, text, disable_web_page_preview: true }),
     });
-    if (!r.ok) console.error("Telegram", r.status, (await r.text()).slice(0, 200));
+    if (r.ok) return "envoyé";
+    const body = (await r.text()).slice(0, 200);
+    console.error("Telegram", r.status, body);
+    let desc = body; try { desc = JSON.parse(body).description || body; } catch (e) {}
+    return "erreur " + r.status + " — " + desc;
   } catch (e) {
     console.error("Telegram", e.message);
+    return "erreur — " + e.message;
   }
 }
 
@@ -281,14 +287,16 @@ exports.handler = async (event) => {
     const ok = r.res.ok && r.res.data && r.res.data.id;
     console.log("CRM RESPONSE (" + r.action + ", " + r.level + "):", r.res.status, ok ? r.res.data.id : JSON.stringify(r.res.data).slice(0, 600));
     const hsStatus = ok ? (r.action === "created" ? "contact créé" : "contact mis à jour") + (r.level !== "complet" ? " (champs de base seulement : " + r.level + ")" : "") : "ÉCHEC " + r.res.status + " — lead à saisir à la main";
-    await Promise.all([notifyLead(properties, hsStatus), notifyTelegram(properties, hsStatus)]);
+    const tg = await notifyTelegram(properties, hsStatus);
+    await notifyLead(properties, hsStatus, tg);
     if (!ok) {
       return jsonResponse(r.res.ok ? 502 : r.res.status, { error: "HubSpot " + r.action + " failed", details: r.res.data }, corsHeaders);
     }
     return jsonResponse(200, { success: true, action: r.action, level: r.level, contactId: r.res.data.id }, corsHeaders);
   } catch (err) {
     console.error("Unexpected CRM error:", err);
-    await Promise.all([notifyLead(properties, "ÉCHEC (" + err.message + ") — lead à saisir à la main"), notifyTelegram(properties, "ÉCHEC (" + err.message + ")")]);
+    const tg = await notifyTelegram(properties, "ÉCHEC (" + err.message + ")");
+    await notifyLead(properties, "ÉCHEC (" + err.message + ") — lead à saisir à la main", tg);
     return jsonResponse(500, {
       error: "Internal server error",
       details: err.message,
